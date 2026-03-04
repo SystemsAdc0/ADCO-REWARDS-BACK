@@ -1,7 +1,13 @@
-import { Router } from 'express';
-import { getUsers, getUserById, updateUser, deleteUser, addPoints } from '../controllers/userController';
-import { authenticate } from '../middlewares/authenticate';
-import { authorize } from '../middlewares/authorize';
+import { Router } from "express";
+import {
+  getUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+  addPoints,
+} from "../controllers/userController";
+import { authenticate } from "../middlewares/authenticate";
+import { authorize } from "../middlewares/authorize";
 
 const router = Router();
 
@@ -15,7 +21,7 @@ const router = Router();
  *     responses:
  *       200: { description: Lista de usuarios }
  */
-router.get('/', authenticate, authorize('admin'), getUsers);
+router.get("/", authenticate, authorize("admin"), getUsers);
 
 /**
  * @swagger
@@ -32,7 +38,7 @@ router.get('/', authenticate, authorize('admin'), getUsers);
  *     responses:
  *       200: { description: Datos del usuario }
  */
-router.get('/:id', authenticate, authorize('admin'), getUserById);
+router.get("/:id", authenticate, authorize("admin"), getUserById);
 
 /**
  * @swagger
@@ -49,8 +55,8 @@ router.get('/:id', authenticate, authorize('admin'), getUserById);
  *     responses:
  *       200: { description: Usuario actualizado }
  */
-router.put('/:id', authenticate, authorize('admin'), updateUser);
-router.delete('/:id', authenticate, authorize('admin'), deleteUser);
+router.put("/:id", authenticate, authorize("admin"), updateUser);
+router.delete("/:id", authenticate, authorize("admin"), deleteUser);
 
 /**
  * @swagger
@@ -77,6 +83,6 @@ router.delete('/:id', authenticate, authorize('admin'), deleteUser);
  *     responses:
  *       200: { description: Puntos agregados }
  */
-router.post('/:id/add-points', authenticate, authorize('admin'), addPoints);
+router.post("/:id/add-points", authenticate, authorize("admin"), addPoints);
 
 export default router;

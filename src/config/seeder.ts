@@ -18,7 +18,17 @@ async function seed() {
     await User.bulkCreate([
       { name: 'Administrador', email: 'admin@premios.com', password: hash, role: 'admin', points: 0 },
       { name: 'Moderador Ejemplo', email: 'moderador@premios.com', password: hash, role: 'moderator', points: 0 },
-      { name: 'Usuario Demo', email: 'usuario@premios.com', password: hash, role: 'user', points: 500 },
+      // Usuarios con puntos para el ranking
+      { name: 'Sofia Martinez', email: 'sofia@premios.com', password: hash, role: 'user', points: 4800, status: 'active' },
+      { name: 'Carlos Gomez', email: 'carlos@premios.com', password: hash, role: 'user', points: 3950, status: 'active' },
+      { name: 'Ana Rodriguez', email: 'ana@premios.com', password: hash, role: 'user', points: 3200, status: 'active' },
+      { name: 'Luis Perez', email: 'luis@premios.com', password: hash, role: 'user', points: 2750, status: 'active' },
+      { name: 'Maria Lopez', email: 'maria@premios.com', password: hash, role: 'user', points: 2100, status: 'active' },
+      { name: 'Diego Torres', email: 'diego@premios.com', password: hash, role: 'user', points: 1680, status: 'active' },
+      { name: 'Valentina Cruz', email: 'valentina@premios.com', password: hash, role: 'user', points: 1200, status: 'active' },
+      { name: 'Andres Ruiz', email: 'andres@premios.com', password: hash, role: 'user', points: 980, status: 'active' },
+      { name: 'Camila Vargas', email: 'camila@premios.com', password: hash, role: 'user', points: 750, status: 'active' },
+      { name: 'Usuario Demo', email: 'usuario@premios.com', password: hash, role: 'user', points: 500, status: 'active' },
     ]);
     console.log('Usuarios creados.');
 
