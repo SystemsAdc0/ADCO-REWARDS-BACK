@@ -1,6 +1,7 @@
-import { DataTypes, Model, Optional } from 'sequelize';
-import sequelize from '../config/database';
-import { RedemptionStatus } from '../types';
+import { DataTypes, Model, Optional } from "sequelize";
+import sequelize from "../config/database";
+import { RedemptionStatus } from "../types";
+import User from "./User";
 
 interface RedemptionAttributes {
   id: number;
@@ -14,8 +15,10 @@ interface RedemptionAttributes {
   updated_at?: Date;
 }
 
-interface RedemptionCreationAttributes
-  extends Optional<RedemptionAttributes, 'id' | 'status' | 'notes' | 'redeemed_at'> {}
+interface RedemptionCreationAttributes extends Optional<
+  RedemptionAttributes,
+  "id" | "status" | "notes" | "redeemed_at"
+> {}
 
 class Redemption
   extends Model<RedemptionAttributes, RedemptionCreationAttributes>
@@ -28,18 +31,23 @@ class Redemption
   public points_spent!: number;
   public notes?: string;
   public redeemed_at?: Date;
+  public user?: User;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
 
 Redemption.init(
   {
-    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     user_id: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
     prize_id: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
     status: {
-      type: DataTypes.ENUM('pending', 'approved', 'delivered', 'rejected'),
-      defaultValue: 'pending',
+      type: DataTypes.ENUM("pending", "approved", "delivered", "rejected"),
+      defaultValue: "pending",
     },
     points_spent: { type: DataTypes.INTEGER, allowNull: false },
     notes: { type: DataTypes.TEXT, allowNull: true },
@@ -47,11 +55,11 @@ Redemption.init(
   },
   {
     sequelize,
-    tableName: 'redemptions',
+    tableName: "redemptions",
     timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
-  }
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  },
 );
 
 export default Redemption;

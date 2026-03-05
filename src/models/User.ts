@@ -1,6 +1,6 @@
-import { DataTypes, Model, Optional } from 'sequelize';
-import sequelize from '../config/database';
-import { UserRole, UserStatus } from '../types';
+import { DataTypes, Model, Optional } from "sequelize";
+import sequelize from "../config/database";
+import { UserRole, UserStatus } from "../types";
 
 interface UserAttributes {
   id: number;
@@ -15,9 +15,15 @@ interface UserAttributes {
   updated_at?: Date;
 }
 
-interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'points' | 'status' | 'avatar'> {}
+interface UserCreationAttributes extends Optional<
+  UserAttributes,
+  "id" | "points" | "status" | "avatar"
+> {}
 
-class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
+class User
+  extends Model<UserAttributes, UserCreationAttributes>
+  implements UserAttributes
+{
   public id!: number;
   public name!: string;
   public email!: string;
@@ -32,28 +38,33 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
 
 User.init(
   {
-    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     name: { type: DataTypes.STRING(100), allowNull: false },
     email: { type: DataTypes.STRING(150), allowNull: false, unique: true },
+
     password: { type: DataTypes.STRING(255), allowNull: false },
     role: {
-      type: DataTypes.ENUM('admin', 'moderator', 'user', 'visitor'),
-      defaultValue: 'user',
+      type: DataTypes.ENUM("admin", "moderator", "user", "visitor"),
+      defaultValue: "user",
     },
     points: { type: DataTypes.INTEGER, defaultValue: 0 },
     status: {
-      type: DataTypes.ENUM('active', 'inactive'),
-      defaultValue: 'active',
+      type: DataTypes.ENUM("active", "inactive"),
+      defaultValue: "active",
     },
     avatar: { type: DataTypes.STRING(255), allowNull: true },
   },
   {
     sequelize,
-    tableName: 'users',
+    tableName: "users",
     timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
-  }
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  },
 );
 
 export default User;
