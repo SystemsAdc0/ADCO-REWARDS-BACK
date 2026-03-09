@@ -1,6 +1,6 @@
-import { DataTypes, Model, Optional } from 'sequelize';
-import sequelize from '../config/database';
-import { PrizeStatus } from '../types';
+import { DataTypes, Model, Optional } from "sequelize";
+import sequelize from "../config/database";
+import { PrizeStatus } from "../types";
 
 interface PrizeAttributes {
   id: number;
@@ -14,13 +14,19 @@ interface PrizeAttributes {
   updated_at?: Date;
 }
 
-interface PrizeCreationAttributes extends Optional<PrizeAttributes, 'id' | 'image' | 'status'> {}
+interface PrizeCreationAttributes extends Optional<
+  PrizeAttributes,
+  "id" | "image" | "status"
+> {}
 
-class Prize extends Model<PrizeAttributes, PrizeCreationAttributes> implements PrizeAttributes {
+class Prize
+  extends Model<PrizeAttributes, PrizeCreationAttributes>
+  implements PrizeAttributes
+{
   public id!: number;
   public name!: string;
   public description!: string;
-  public image!: string;
+  public image?: string;
   public points_required!: number;
   public stock!: number;
   public status!: PrizeStatus;
@@ -30,24 +36,28 @@ class Prize extends Model<PrizeAttributes, PrizeCreationAttributes> implements P
 
 Prize.init(
   {
-    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     name: { type: DataTypes.STRING(150), allowNull: false },
     description: { type: DataTypes.TEXT, allowNull: false },
     image: { type: DataTypes.STRING(255), allowNull: true },
     points_required: { type: DataTypes.INTEGER, allowNull: false },
-    stock: { type: DataTypes.INTEGER, defaultValue: 0 },
+    stock: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     status: {
-      type: DataTypes.ENUM('active', 'inactive'),
-      defaultValue: 'active',
+      type: DataTypes.ENUM("active", "inactive"),
+      defaultValue: "active",
     },
   },
   {
     sequelize,
-    tableName: 'prizes',
+    tableName: "prizes",
     timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
-  }
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  },
 );
 
 export default Prize;

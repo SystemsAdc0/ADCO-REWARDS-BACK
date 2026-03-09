@@ -9,7 +9,7 @@ interface ActivityEntryAttributes {
   status: ActivityEntryStatus;
   reviewed_by?: number;
   review_notes?: string;
-  file_name: string;
+  image: string;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -29,7 +29,7 @@ class ActivityEntry
   public status!: ActivityEntryStatus;
   public reviewed_by?: number;
   public review_notes?: string;
-  public file_name!: string;
+  public image!: string;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -47,7 +47,7 @@ ActivityEntry.init(
       type: DataTypes.ENUM("pending", "approved", "rejected"),
       defaultValue: "pending",
     },
-    file_name: { type: DataTypes.TEXT, allowNull: false },
+    image: { type: DataTypes.TEXT, allowNull: false },
     reviewed_by: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
     review_notes: { type: DataTypes.TEXT, allowNull: true },
   },

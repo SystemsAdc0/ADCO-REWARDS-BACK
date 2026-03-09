@@ -10,7 +10,7 @@ interface ActivityAttributes {
   start_date: Date;
   end_date: Date;
   status: ActivityStatus;
-  file_name: string;
+  image: string;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -29,7 +29,7 @@ class Activity
   public description!: string;
   public points_reward!: number;
   public start_date!: Date;
-  public file_name!: string;
+  public image!: string;
   public end_date!: Date;
   public status!: ActivityStatus;
   public readonly created_at!: Date;
@@ -45,7 +45,7 @@ Activity.init(
     },
     name: { type: DataTypes.STRING(150), allowNull: false },
     description: { type: DataTypes.TEXT, allowNull: false },
-    file_name: { type: DataTypes.TEXT, allowNull: false },
+    image: { type: DataTypes.TEXT, allowNull: false },
     points_reward: { type: DataTypes.INTEGER, allowNull: false },
     start_date: { type: DataTypes.DATE, allowNull: false },
 

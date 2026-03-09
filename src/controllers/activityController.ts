@@ -3,6 +3,7 @@ import { AuthRequest } from "../types";
 import { Activity, ActivityEntry, User, PointHistory } from "../models";
 import { createNotification } from "../services/notificationService";
 import { Sequelize } from "sequelize";
+import SocialMedia from "../models/SocialMedia";
 
 export const getActivities = async (
   req: AuthRequest,
@@ -63,8 +64,14 @@ export const createActivity = async (
   console.log(req.body);
 
   try {
-    const { data, image } = req.body;
     const activity = await Activity.create(req.body);
+    const { social_media } = req.body;
+    for (let s of social_media) {
+      await SocialMedia.create({
+        activity_id: activity.dataValues.id,
+        name: s,
+      });
+    }
     res.status(201).json(activity);
   } catch (err) {
     console.log(err);
@@ -117,7 +124,7 @@ export const joinActivity = async (
     const entry = await ActivityEntry.create({
       user_id: userId,
       activity_id: activityId,
-      file_name: req.body.file_name,
+      image: req.body.file_name,
     });
     res.status(201).json({
       message: "Participacion registrada, pendiente de revision",

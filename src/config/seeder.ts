@@ -120,30 +120,39 @@ async function seed() {
         name: "Auriculares Bluetooth",
         description: "Auriculares inalambricos de alta calidad",
         points_required: 300,
-        image: "",
+        image:
+          "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         stock: 10,
       },
       {
         name: "Tarjeta de regalo $50",
         description: "Tarjeta de regalo para tiendas en linea",
         points_required: 200,
+        image:
+          "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         stock: 20,
       },
       {
         name: "Mochila Ejecutiva",
         description: 'Mochila de cuero para laptop de 15"',
+        image:
+          "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         points_required: 500,
         stock: 5,
       },
       {
         name: "Termo Stanley 1L",
         description: "Termo de acero inoxidable 1 litro",
+        image:
+          "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         points_required: 150,
         stock: 15,
       },
       {
         name: "Curso Online Premium",
         description: "Acceso a plataforma de cursos por 1 ano",
+        image:
+          "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         points_required: 400,
         stock: 50,
       },
@@ -160,7 +169,7 @@ async function seed() {
           "Asiste a la capacitacion mensual del equipo y gana puntos",
         points_reward: 100,
         start_date: now,
-        file_name:
+        image:
           "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         end_date: future,
         status: "active",
@@ -170,7 +179,7 @@ async function seed() {
         description: "Completa la encuesta de satisfaccion del trimestre",
         points_reward: 50,
         start_date: now,
-        file_name:
+        image:
           "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         end_date: future,
         status: "active",
@@ -178,7 +187,7 @@ async function seed() {
       {
         name: "Referir un Colega",
         description: "Refiere a un nuevo miembro al programa y gana puntos",
-        file_name:
+        image:
           "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         points_reward: 200,
         start_date: now,
