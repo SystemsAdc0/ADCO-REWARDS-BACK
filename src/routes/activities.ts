@@ -23,6 +23,7 @@ router.get(
   authorize("admin", "user", "moderator"),
   getActivities,
 );
+
 router.post("/", authenticate, authorize("admin"), createActivity);
 router.put("/:id", authenticate, authorize("admin"), updateActivity);
 router.delete("/:id", authenticate, authorize("admin"), deleteActivity);

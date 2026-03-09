@@ -1,9 +1,15 @@
-import { Router } from 'express';
-import { getPrizes, getPrizeById, createPrize, updatePrize, deletePrize } from '../controllers/prizeController';
-import { authenticate } from '../middlewares/authenticate';
-import { authorize } from '../middlewares/authorize';
-import { upload } from '../middlewares/upload';
-import { prizeCloud } from '../controllers/googleCloudController';
+import { Router } from "express";
+import {
+  getPrizes,
+  getPrizeById,
+  createPrize,
+  updatePrize,
+  deletePrize,
+} from "../controllers/prizeController";
+import { authenticate } from "../middlewares/authenticate";
+import { authorize } from "../middlewares/authorize";
+import { upload } from "../middlewares/upload";
+import { prizeCloud } from "../controllers/googleCloudController";
 
 const router = Router();
 
@@ -17,8 +23,8 @@ const router = Router();
  *     responses:
  *       200: { description: Lista de premios }
  */
-router.get('/', getPrizes);
-router.get('/:id', getPrizeById);
+router.get("/", getPrizes);
+router.get("/:id", getPrizeById);
 
 /**
  * @swagger
@@ -43,8 +49,20 @@ router.get('/:id', getPrizeById);
  *     responses:
  *       201: { description: Premio creado }
  */
-router.post('/', authenticate, authorize('admin'), prizeCloud, createPrize);
-router.put('/:id', authenticate, authorize('admin'), upload.single('image'), updatePrize);
-router.delete('/:id', authenticate, authorize('admin'), deletePrize);
+router.post("/", authenticate, authorize("admin"), createPrize);
+router.post(
+  "/file/prize-signed-upload",
+  authenticate,
+  authorize("admin"),
+  prizeCloud,
+);
+router.put(
+  "/:id",
+  authenticate,
+  authorize("admin"),
+  upload.single("image"),
+  updatePrize,
+);
+router.delete("/:id", authenticate, authorize("admin"), deletePrize);
 
 export default router;

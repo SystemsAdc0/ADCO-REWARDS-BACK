@@ -26,7 +26,7 @@ class Prize
   public id!: number;
   public name!: string;
   public description!: string;
-  public image?: string;
+  public image!: string;
   public points_required!: number;
   public stock!: number;
   public status!: PrizeStatus;
@@ -43,7 +43,7 @@ Prize.init(
     },
     name: { type: DataTypes.STRING(150), allowNull: false },
     description: { type: DataTypes.TEXT, allowNull: false },
-    image: { type: DataTypes.STRING(255), allowNull: true },
+    image: { type: DataTypes.STRING(355), allowNull: true },
     points_required: { type: DataTypes.INTEGER, allowNull: false },
     stock: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     status: {

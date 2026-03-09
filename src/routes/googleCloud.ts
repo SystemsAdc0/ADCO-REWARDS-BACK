@@ -1,12 +1,12 @@
 import { Router } from "express";
 import {
+  activityCloud,
   getActivityFile,
-  googleActivityPost,
-  googleCloudCtr,
+  googleActivityEntries,
 } from "../controllers/googleCloudController";
 
 const router = Router();
-router.post("/signed-upload", googleCloudCtr);
-router.post("/activity-signed-upload", googleActivityPost);
+router.post("/activity-entrie-signed-upload", googleActivityEntries);
+router.post("/activity-single-upload", activityCloud);
 router.post("/download", getActivityFile);
 export default router;

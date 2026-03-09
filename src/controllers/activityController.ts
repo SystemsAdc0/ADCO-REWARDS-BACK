@@ -125,19 +125,23 @@ export const joinActivity = async (
   req: AuthRequest,
   res: Response,
 ): Promise<void> => {
+  console.log(req.body);
+
   try {
     const userId = req.user!.id;
     const activityId = parseInt(String(req.params.id));
     const entry = await ActivityEntry.create({
       user_id: userId,
       activity_id: activityId,
-      image: req.body.file_name,
+      file: req.body.file,
     });
     res.status(201).json({
       message: "Participacion registrada, pendiente de revision",
       entry,
     });
   } catch (err) {
+    console.log(err);
+
     res.status(500).json({ message: "Error", error: err });
   }
 };

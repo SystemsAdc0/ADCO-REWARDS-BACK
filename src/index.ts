@@ -43,7 +43,7 @@ app.use("/api/prizes", prizeRoutes);
 app.use("/api/redemptions", redemptionRoutes);
 app.use("/api/activities", activityRoutes);
 app.use("/api/points", pointRoutes);
-app.use("/api/files", googleFiles);
+app.use("/api/file", googleFiles);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/reports", reportRoutes);
 
