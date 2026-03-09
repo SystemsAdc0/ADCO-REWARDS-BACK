@@ -31,12 +31,19 @@ export const getActivities = async (
           ],
         ],
       },
+      include: {
+        model: SocialMedia,
+        as: "social_medias",
+        attributes: ["name"],
+      },
       where: { status: "active" },
       order: [["start_date", "ASC"]],
     });
 
     res.json(activities);
   } catch (err) {
+    console.log(err);
+
     res.status(500).json({ message: "Error", error: err });
   }
 };
