@@ -1,6 +1,6 @@
-import { DataTypes, Model, Optional } from 'sequelize';
-import sequelize from '../config/database';
-import { ActivityStatus } from '../types';
+import { DataTypes, Model, Optional } from "sequelize";
+import sequelize from "../config/database";
+import { ActivityStatus } from "../types";
 
 interface ActivityAttributes {
   id: number;
@@ -10,11 +10,15 @@ interface ActivityAttributes {
   start_date: Date;
   end_date: Date;
   status: ActivityStatus;
+  file_name: string;
   created_at?: Date;
   updated_at?: Date;
 }
 
-interface ActivityCreationAttributes extends Optional<ActivityAttributes, 'id' | 'status'> {}
+interface ActivityCreationAttributes extends Optional<
+  ActivityAttributes,
+  "id" | "status"
+> {}
 
 class Activity
   extends Model<ActivityAttributes, ActivityCreationAttributes>
@@ -25,6 +29,7 @@ class Activity
   public description!: string;
   public points_reward!: number;
   public start_date!: Date;
+  public file_name!: string;
   public end_date!: Date;
   public status!: ActivityStatus;
   public readonly created_at!: Date;
@@ -33,24 +38,30 @@ class Activity
 
 Activity.init(
   {
-    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     name: { type: DataTypes.STRING(150), allowNull: false },
     description: { type: DataTypes.TEXT, allowNull: false },
+    file_name: { type: DataTypes.TEXT, allowNull: false },
     points_reward: { type: DataTypes.INTEGER, allowNull: false },
     start_date: { type: DataTypes.DATE, allowNull: false },
+
     end_date: { type: DataTypes.DATE, allowNull: false },
     status: {
-      type: DataTypes.ENUM('active', 'inactive', 'finished'),
-      defaultValue: 'active',
+      type: DataTypes.ENUM("active", "inactive", "finished"),
+      defaultValue: "active",
     },
   },
   {
     sequelize,
-    tableName: 'activities',
+    tableName: "activities",
     timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
-  }
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  },
 );
 
 export default Activity;

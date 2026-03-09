@@ -2,9 +2,46 @@ import { Request, Response } from "express";
 import { AuthRequest } from "../types";
 import { Activity, ActivityEntry, User, PointHistory } from "../models";
 import { createNotification } from "../services/notificationService";
+import { Sequelize } from "sequelize";
 
 export const getActivities = async (
-  _req: Request,
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  console.log(req.user);
+
+  try {
+    const user = req.user;
+    if (!user?.id) {
+      res.status(403).json("usuario no identificado");
+      return;
+    }
+    const activities = await Activity.findAll({
+      attributes: {
+        include: [
+          [
+            Sequelize.literal(`EXISTS (
+          SELECT 1
+          FROM activity_entries ae
+          WHERE ae.activity_id = Activity.id
+          AND ae.user_id = ${user.id}
+        )`),
+            "participate",
+          ],
+        ],
+      },
+      where: { status: "active" },
+      order: [["start_date", "ASC"]],
+    });
+
+    res.json(activities);
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const getActivitiesPublic = async (
+  req: Request,
   res: Response,
 ): Promise<void> => {
   try {
@@ -12,6 +49,7 @@ export const getActivities = async (
       where: { status: "active" },
       order: [["start_date", "ASC"]],
     });
+
     res.json(activities);
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
@@ -22,10 +60,15 @@ export const createActivity = async (
   req: AuthRequest,
   res: Response,
 ): Promise<void> => {
+  console.log(req.body);
+
   try {
+    const { data, image } = req.body;
     const activity = await Activity.create(req.body);
     res.status(201).json(activity);
   } catch (err) {
+    console.log(err);
+
     res.status(500).json({ message: "Error", error: err });
   }
 };
@@ -70,32 +113,11 @@ export const joinActivity = async (
 ): Promise<void> => {
   try {
     const userId = req.user!.id;
-
     const activityId = parseInt(String(req.params.id));
-    const activity = await Activity.findByPk(activityId);
-    if (!activity || activity.status !== "active") {
-      res.status(404).json({ message: "Actividad no disponible" });
-      return;
-    }
-
-    const existing = await ActivityEntry.findOne({
-      where: { user_id: userId, activity_id: activityId },
-    });
-    if (existing) {
-      res.status(400).json({ message: "Ya participas en esta actividad" });
-      return;
-    }
-    if (!req.file) {
-      res
-        .status(400)
-        .json({ message: "Archivo de participacion no encontrado" });
-      return;
-    }
-
     const entry = await ActivityEntry.create({
       user_id: userId,
       activity_id: activityId,
-      file_name: req.file.originalname,
+      file_name: req.body.file_name,
     });
     res.status(201).json({
       message: "Participacion registrada, pendiente de revision",

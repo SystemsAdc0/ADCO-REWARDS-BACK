@@ -20,7 +20,7 @@ class Prize extends Model<PrizeAttributes, PrizeCreationAttributes> implements P
   public id!: number;
   public name!: string;
   public description!: string;
-  public image?: string;
+  public image!: string;
   public points_required!: number;
   public stock!: number;
   public status!: PrizeStatus;
