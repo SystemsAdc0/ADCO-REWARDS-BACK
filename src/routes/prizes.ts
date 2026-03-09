@@ -3,6 +3,7 @@ import { getPrizes, getPrizeById, createPrize, updatePrize, deletePrize } from '
 import { authenticate } from '../middlewares/authenticate';
 import { authorize } from '../middlewares/authorize';
 import { upload } from '../middlewares/upload';
+import { prizeCloud } from '../controllers/googleCloudController';
 
 const router = Router();
 
@@ -42,7 +43,7 @@ router.get('/:id', getPrizeById);
  *     responses:
  *       201: { description: Premio creado }
  */
-router.post('/', authenticate, authorize('admin'), upload.single('image'), createPrize);
+router.post('/', authenticate, authorize('admin'), prizeCloud, createPrize);
 router.put('/:id', authenticate, authorize('admin'), upload.single('image'), updatePrize);
 router.delete('/:id', authenticate, authorize('admin'), deletePrize);
 

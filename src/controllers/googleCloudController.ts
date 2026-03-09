@@ -44,7 +44,41 @@ export const googleCloudCtr = async (
     res.status(500).json({ message: "Error generando signed upload URL" });
   }
 };
+export const prizeCloud = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { filename, contentType } = req.body as {
+      filename?: string;
+      contentType?: string;
+    };
 
+    if (!filename || !contentType) {
+      res
+        .status(400)
+        .json({ message: "filename y contentType son requeridos" });
+      return;
+    }
+
+    const ext = filename.split(".").pop()?.toLowerCase() || "bin";
+    const objectName = `prizes/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+
+    const file = bucket.file(objectName);
+
+    const [url] = await file.getSignedUrl({
+      version: "v4",
+      action: "write",
+      expires: Date.now() + 5 * 60 * 1000,
+      contentType,
+    });
+
+    res.json({ url, objectName });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error generando signed upload URL" });
+  }
+};
 export const googleActivityPost = async (
   req: Request,
   res: Response,
