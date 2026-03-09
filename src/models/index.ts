@@ -39,7 +39,7 @@ Notification.belongsTo(User, { foreignKey: "user_id", as: "user" });
 //Social Media
 Activity.hasMany(SocialMedia, {
   foreignKey: "activity_id",
-  as: "socialMedias",
+  as: "social_medias",
 });
 
 SocialMedia.belongsTo(Activity, {
