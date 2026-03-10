@@ -5,6 +5,7 @@ import { authorize } from '../middlewares/authorize';
 
 const router = Router();
 
+
 /**
  * @swagger
  * /api/auth/register:

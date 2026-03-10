@@ -94,6 +94,7 @@ export const addPoints = async (
       points,
       action: "adjusted",
       description: description || "Ajuste manual de puntos",
+      assigned_by: req.user!.id,
     });
     await createNotification(
       user.id,

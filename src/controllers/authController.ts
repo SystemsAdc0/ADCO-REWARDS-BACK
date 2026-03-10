@@ -32,6 +32,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
+   
     const { email, password } = req.body;
     const user = await User.findOne({ where: { email } });
     if (!user) {

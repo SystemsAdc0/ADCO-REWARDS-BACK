@@ -1,6 +1,8 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import path from "path";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
@@ -18,7 +20,6 @@ import notificationRoutes from "./routes/notifications";
 import reportRoutes from "./routes/reports";
 import googleFiles from "./routes/googleCloud";
 
-dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -26,6 +27,26 @@ const PORT = process.env.PORT || 4000;
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Logger de requests
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    const ms = Date.now() - start;
+    const color =
+      res.statusCode >= 500
+        ? "\x1b[31m" // rojo
+        : res.statusCode >= 400
+          ? "\x1b[33m" // amarillo
+          : res.statusCode >= 300
+            ? "\x1b[36m" // cyan
+            : "\x1b[32m"; // verde
+    process.stdout.write(
+      `${color}${req.method}\x1b[0m ${req.originalUrl} \x1b[90m→ ${res.statusCode} (${ms}ms)\x1b[0m\n`,
+    );
+  });
+  next();
+});
 
 // Servir imagenes subidas
 app.use(
@@ -61,9 +82,17 @@ async function start() {
     // await sequelize.sync({ alter: true });
     await sequelize.sync();
     console.log("Modelos sincronizados.");
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Servidor corriendo en http://localhost:${PORT}`);
       console.log(`Swagger docs: http://localhost:${PORT}/api-docs`);
+    });
+    server.on("error", (err: NodeJS.ErrnoException) => {
+      if (err.code === "EADDRINUSE") {
+        console.error(`Puerto ${PORT} ya está en uso. Mata el proceso anterior.`);
+      } else {
+        console.error("Error en el servidor:", err);
+      }
+      process.exit(1);
     });
   } catch (error) {
     console.error("Error al iniciar:", error);

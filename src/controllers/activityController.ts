@@ -72,13 +72,15 @@ export const createActivity = async (
 
   try {
     const activity = await Activity.create(req.body);
-    const { social_media } = req.body;
-    for (let s of social_media) {
+    const { social_medias } = req.body;
+    for (let s of social_medias) {
       await SocialMedia.create({
         activity_id: activity.dataValues.id,
         name: s,
       });
     }
+    console.log(activity);
+
     res.status(201).json(activity);
   } catch (err) {
     console.log(err);
@@ -125,8 +127,6 @@ export const joinActivity = async (
   req: AuthRequest,
   res: Response,
 ): Promise<void> => {
-  console.log(req.body);
-
   try {
     const userId = req.user!.id;
     const activityId = parseInt(String(req.params.id));
@@ -147,21 +147,49 @@ export const joinActivity = async (
 };
 
 export const getEntries = async (
-  _req: AuthRequest,
+  req: AuthRequest,
   res: Response,
 ): Promise<void> => {
   try {
+    const isAdmin = req.user?.role === "admin";
     const entries = await ActivityEntry.findAll({
+      attributes: [
+        "id",
+        "user_id",
+        "activity_id",
+        "status",
+        "reviewed_by",
+        "review_notes",
+        "file",
+        "created_at",
+        "updated_at",
+      ],
       include: [
-        { association: "user", attributes: ["id", "name", "email"] },
         {
-          association: "activity",
+          model: User,
+          as: "user",
+          attributes: ["id", "name", "email"],
+        },
+        {
+          model: Activity,
+          as: "activity",
           attributes: ["id", "name", "points_reward"],
         },
+        ...(isAdmin
+          ? [
+              {
+                model: User,
+                as: "reviewer",
+                attributes: ["id", "name"],
+                required: false,
+              },
+            ]
+          : []),
       ],
       order: [["created_at", "DESC"]],
     });
-    res.json(entries);
+
+    res.json(entries.map((e) => e.get({ plain: true })));
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
   }
@@ -201,6 +229,7 @@ export const reviewEntry = async (
           points: activity.points_reward,
           action: "earned",
           description: `Actividad aprobada: ${activity.name}`,
+          assigned_by: req.user!.id,
         });
         await createNotification(
           user.id,

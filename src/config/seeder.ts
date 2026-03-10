@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import sequelize from "./database";
-import { User, Prize, Activity } from "../models";
+import { User, Prize, Activity, ActivityEntry, PointHistory } from "../models";
 import bcrypt from "bcryptjs";
 
 async function seed() {
@@ -159,6 +159,13 @@ async function seed() {
     ]);
     console.log("Premios creados.");
 
+    // Obtener IDs de usuarios creados
+    const [admin, moderador, sofia, carlos, ana, luis] = await User.findAll({
+      attributes: ["id", "name"],
+      order: [["id", "ASC"]],
+      limit: 6,
+    });
+
     // Crear actividades
     const now = new Date();
     const future = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
@@ -196,6 +203,78 @@ async function seed() {
       },
     ]);
     console.log("Actividades creadas.");
+
+    // Obtener IDs de actividades creadas
+    const [actCapacitacion, actEncuesta, actReferir] = await Activity.findAll({
+      attributes: ["id", "name", "points_reward"],
+      order: [["id", "ASC"]],
+      limit: 3,
+    });
+
+    // Crear participaciones de ejemplo
+    await ActivityEntry.bulkCreate([
+      {
+        // Pendiente: Sofia en Capacitacion Mensual
+        user_id: sofia.id,
+        activity_id: actCapacitacion.id,
+        file: "seed-participacion-sofia.pdf",
+        status: "pending",
+      },
+      {
+        // Pendiente: Luis en Referir un Colega
+        user_id: luis.id,
+        activity_id: actReferir.id,
+        file: "seed-participacion-luis.pdf",
+        status: "pending",
+      },
+      {
+        // Aprobada: Carlos en Encuesta — aprobado por Moderador
+        user_id: carlos.id,
+        activity_id: actEncuesta.id,
+        file: "seed-participacion-carlos.pdf",
+        status: "approved",
+        reviewed_by: moderador.id,
+        review_notes: "Encuesta completada correctamente.",
+      },
+      {
+        // Aprobada: Ana en Capacitacion — aprobado por Admin
+        user_id: ana.id,
+        activity_id: actCapacitacion.id,
+        file: "seed-participacion-ana.pdf",
+        status: "approved",
+        reviewed_by: admin.id,
+        review_notes: "Asistencia confirmada.",
+      },
+      {
+        // Rechazada: Sofia en Referir un Colega — rechazada por Moderador
+        user_id: sofia.id,
+        activity_id: actReferir.id,
+        file: "seed-participacion-sofia-2.pdf",
+        status: "rejected",
+        reviewed_by: moderador.id,
+        review_notes: "No cumple con los requisitos minimos.",
+      },
+    ]);
+    console.log("Participaciones creadas.");
+
+    // PointHistory para las participaciones aprobadas
+    await PointHistory.bulkCreate([
+      {
+        user_id: carlos.id,
+        points: actEncuesta.dataValues.points_reward,
+        action: "earned",
+        description: `Actividad aprobada: ${actEncuesta.dataValues.name}`,
+        assigned_by: moderador.id,
+      },
+      {
+        user_id: ana.id,
+        points: actCapacitacion.dataValues.points_reward,
+        action: "earned",
+        description: `Actividad aprobada: ${actCapacitacion.dataValues.name}`,
+        assigned_by: admin.id,
+      },
+    ]);
+    console.log("Historial de puntos creado.");
 
     console.log("\n=== SEEDER COMPLETADO ===");
     console.log("Usuarios de prueba:");

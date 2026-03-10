@@ -22,6 +22,7 @@ Redemption.belongsTo(Prize, { foreignKey: "prize_id", as: "prize" });
 
 // PointHistory associations
 PointHistory.belongsTo(User, { foreignKey: "user_id", as: "user" });
+PointHistory.belongsTo(User, { foreignKey: "assigned_by", as: "assigner" });
 
 // Activity associations
 Activity.hasMany(ActivityEntry, { foreignKey: "activity_id", as: "entries" });

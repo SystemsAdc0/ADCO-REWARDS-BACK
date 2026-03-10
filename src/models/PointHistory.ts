@@ -7,10 +7,11 @@ interface PointHistoryAttributes {
   points: number;
   action: 'earned' | 'spent' | 'adjusted';
   description: string;
+  assigned_by?: number;
   created_at?: Date;
 }
 
-interface PointHistoryCreationAttributes extends Optional<PointHistoryAttributes, 'id'> {}
+interface PointHistoryCreationAttributes extends Optional<PointHistoryAttributes, 'id' | 'assigned_by'> {}
 
 class PointHistory
   extends Model<PointHistoryAttributes, PointHistoryCreationAttributes>
@@ -21,6 +22,7 @@ class PointHistory
   public points!: number;
   public action!: 'earned' | 'spent' | 'adjusted';
   public description!: string;
+  public assigned_by?: number;
   public readonly created_at!: Date;
 }
 
@@ -34,6 +36,7 @@ PointHistory.init(
       allowNull: false,
     },
     description: { type: DataTypes.STRING(255), allowNull: false },
+    assigned_by: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
   },
   {
     sequelize,
