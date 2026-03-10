@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { register, login, me } from '../controllers/authController';
 import { authenticate } from '../middlewares/authenticate';
+import { authorize } from '../middlewares/authorize';
 
 const router = Router();
 
@@ -26,7 +27,7 @@ const router = Router();
  *       201: { description: Usuario registrado }
  *       400: { description: Email ya registrado }
  */
-router.post('/register', register);
+router.post('/register', authenticate, authorize("admin"), register);
 
 /**
  * @swagger
