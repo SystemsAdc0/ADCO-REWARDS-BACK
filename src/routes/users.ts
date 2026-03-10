@@ -5,6 +5,7 @@ import {
   updateUser,
   deleteUser,
   addPoints,
+  updateUserAavatar,
 } from "../controllers/userController";
 import { authenticate } from "../middlewares/authenticate";
 import { authorize } from "../middlewares/authorize";
@@ -21,6 +22,7 @@ const router = Router();
  *     responses:
  *       200: { description: Lista de usuarios }
  */
+
 router.get("/", authenticate, authorize("admin"), getUsers);
 
 /**
@@ -55,8 +57,13 @@ router.get("/:id", authenticate, authorize("admin"), getUserById);
  *     responses:
  *       200: { description: Usuario actualizado }
  */
+router.put(
+  "/avatar",
+  authenticate,
+  authorize("admin", "moderator", "user"),
+  updateUserAavatar,
+);
 router.put("/:id", authenticate, authorize("admin"), updateUser);
-router.delete("/:id", authenticate, authorize("admin"), deleteUser);
 
 /**
  * @swagger
@@ -84,5 +91,5 @@ router.delete("/:id", authenticate, authorize("admin"), deleteUser);
  *       200: { description: Puntos agregados }
  */
 router.post("/:id/add-points", authenticate, authorize("admin"), addPoints);
-
+router.delete("/:id", authenticate, authorize("admin"), deleteUser);
 export default router;

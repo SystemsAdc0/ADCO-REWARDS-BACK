@@ -108,3 +108,23 @@ export const addPoints = async (
     res.status(500).json({ message: "Error", error: err });
   }
 };
+
+export const updateUserAavatar = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const user = await User.findByPk(String(req.user?.id));
+    if (!user) {
+      res.status(404).json({ message: "Usuario no encontrado" });
+    }
+    const { avatar } = req.body;
+    await user?.update({ avatar });
+    res.json({
+      message: "Usuario actualizado",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error", error: error });
+  }
+};
