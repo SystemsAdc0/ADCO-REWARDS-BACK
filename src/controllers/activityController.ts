@@ -9,8 +9,6 @@ export const getActivities = async (
   req: AuthRequest,
   res: Response,
 ): Promise<void> => {
-  console.log(req.user);
-
   try {
     const user = req.user;
     if (!user?.id) {
@@ -57,7 +55,6 @@ export const getActivitiesPublic = async (
       where: { status: "active" },
       order: [["start_date", "ASC"]],
     });
-
     res.json(activities);
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
@@ -79,7 +76,6 @@ export const createActivity = async (
         name: s,
       });
     }
-    console.log(activity);
 
     res.status(201).json(activity);
   } catch (err) {
@@ -180,7 +176,7 @@ export const getEntries = async (
               {
                 model: User,
                 as: "reviewer",
-                attributes: ["id", "name"],
+                attributes: ["id", "name", "avatar"],
                 required: false,
               },
             ]
