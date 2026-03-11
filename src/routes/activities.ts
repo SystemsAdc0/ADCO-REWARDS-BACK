@@ -30,7 +30,7 @@ router.delete("/:id", authenticate, authorize("admin"), deleteActivity);
 router.post(
   "/:id/join",
   authenticate,
-  authorize("user"),
+  authorize("user", "moderator"),
   authActivity,
   joinActivity,
 );
