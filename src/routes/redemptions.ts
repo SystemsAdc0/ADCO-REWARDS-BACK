@@ -4,6 +4,7 @@ import {
   getMyRedemptions,
   getAllRedemptions,
   updateRedemptionStatus,
+  getWinners,
 } from "../controllers/redemptionController";
 import { authenticate } from "../middlewares/authenticate";
 import { authorize } from "../middlewares/authorize";
@@ -12,6 +13,12 @@ import { redemptionsUpload } from "../controllers/googleCloudController";
 const router = Router();
 
 router.post("/", authenticate, authorize("user"), createRedemption);
+router.get(
+  "/winners",
+  authenticate,
+  authorize("user", "admin", "moderator"),
+  getWinners,
+);
 router.get("/my", authenticate, authorize("user"), getMyRedemptions);
 router.get(
   "/",

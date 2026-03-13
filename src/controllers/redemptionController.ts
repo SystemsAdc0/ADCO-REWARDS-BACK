@@ -2,6 +2,7 @@ import { Response } from "express";
 import { AuthRequest, AuthRequestFile, RedemptionStatus } from "../types";
 import { Redemption, Prize, User, PointHistory } from "../models";
 import { createNotification } from "../services/notificationService";
+import { Op, Sequelize } from "sequelize";
 
 export const createRedemption = async (
   req: AuthRequest,
@@ -51,6 +52,31 @@ export const createRedemption = async (
   }
 };
 
+export const getWinners = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const redemptions = await Redemption.findAll({
+      attributes: ["image", [Sequelize.col("user.name"), "winner"]],
+      where: {
+        image: {
+          [Op.ne]: null as unknown as string,
+        },
+      },
+      include: [
+        {
+          association: "user",
+          attributes: [],
+        },
+      ],
+      raw: true,
+    });
+    res.status(200).json(redemptions);
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
 export const getMyRedemptions = async (
   req: AuthRequest,
   res: Response,
