@@ -11,8 +11,8 @@ import { redemptionsUpload } from "../controllers/googleCloudController";
 
 const router = Router();
 
-router.post("/", authenticate, authorize("user"), createRedemption);
-router.get("/my", authenticate, authorize("user"), getMyRedemptions);
+router.post("/", authenticate, authorize("user", "moderator"), createRedemption);
+router.get("/my", authenticate, authorize("user", "moderator"), getMyRedemptions);
 router.get(
   "/",
   authenticate,

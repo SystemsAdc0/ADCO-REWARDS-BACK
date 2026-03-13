@@ -81,7 +81,7 @@ export const getAllRedemptions = async (
         { association: "prize" },
         ...(req.user?.role === "admin"
           ? [{ association: "delivered", attributes: ["name"] }]
-          : [{}]),
+          : []),
       ],
       order: [["created_at", "DESC"]],
     });
