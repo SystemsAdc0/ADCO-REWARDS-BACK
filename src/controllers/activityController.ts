@@ -70,10 +70,11 @@ export const createActivity = async (
   try {
     const activity = await Activity.create(req.body);
     const { social_medias } = req.body;
+
     for (let s of social_medias) {
       await SocialMedia.create({
         activity_id: activity.dataValues.id,
-        name: s,
+        name: s.name,
       });
     }
 

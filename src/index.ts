@@ -24,12 +24,12 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 // Middlewares globales
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(cors({ origin: "https://lkn26fdp-5173.usw3.devtunnels.ms", credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Logger de requests
-app.use((req, res, next) => {
+app.use((req, res, next) => { 
   const start = Date.now();
   res.on("finish", () => {
     const ms = Date.now() - start;
@@ -88,7 +88,9 @@ async function start() {
     });
     server.on("error", (err: NodeJS.ErrnoException) => {
       if (err.code === "EADDRINUSE") {
-        console.error(`Puerto ${PORT} ya está en uso. Mata el proceso anterior.`);
+        console.error(
+          `Puerto ${PORT} ya está en uso. Mata el proceso anterior.`,
+        );
       } else {
         console.error("Error en el servidor:", err);
       }
