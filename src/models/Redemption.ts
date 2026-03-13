@@ -56,7 +56,7 @@ Redemption.init(
     points_spent: { type: DataTypes.INTEGER, allowNull: false },
     notes: { type: DataTypes.TEXT, allowNull: true },
     image: { type: DataTypes.TEXT, allowNull: true },
-    delivered_by: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+    delivered_by: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
     redeemed_at: { type: DataTypes.DATE, allowNull: true },
   },
   {
