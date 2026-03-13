@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { AuthRequest, RedemptionStatus } from "../types";
+import { AuthRequest, AuthRequestFile, RedemptionStatus } from "../types";
 import { Redemption, Prize, User, PointHistory } from "../models";
 import { createNotification } from "../services/notificationService";
 
@@ -45,7 +45,6 @@ export const createRedemption = async (
       `Canjeaste "${prize.name}" por ${prize.points_required} puntos. En proceso de entrega.`,
       "success",
     );
-
     res.status(201).json(redemption);
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
@@ -69,17 +68,24 @@ export const getMyRedemptions = async (
 };
 
 export const getAllRedemptions = async (
-  _req: AuthRequest,
+  req: AuthRequest,
   res: Response,
 ): Promise<void> => {
   try {
     const redemptions = await Redemption.findAll({
+      attributes: {
+        exclude: ["delivered_by", "user_id"],
+      },
       include: [
         { association: "user", attributes: ["id", "name", "email"] },
         { association: "prize" },
+        ...(req.user?.role === "admin"
+          ? [{ association: "delivered", attributes: ["name"] }]
+          : [{}]),
       ],
       order: [["created_at", "DESC"]],
     });
+
     res.json(redemptions);
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
@@ -87,7 +93,7 @@ export const getAllRedemptions = async (
 };
 
 export const updateRedemptionStatus = async (
-  req: AuthRequest,
+  req: AuthRequestFile,
   res: Response,
 ): Promise<void> => {
   try {
@@ -101,12 +107,14 @@ export const updateRedemptionStatus = async (
       res.status(404).json({ message: "Canje no encontrado" });
       return;
     }
-
+    const image = req.uploadedFile?.publicUrl ?? null;
     const status = req.body.status as RedemptionStatus;
     const updates: Partial<{
       status: RedemptionStatus;
       redeemed_at: Date;
       notes: string;
+      delivered_by: number;
+      image: string;
     }> = { status };
     if (!redemption.user) {
       res.status(404).json({ message: "Usuario no encontrado" });
@@ -123,7 +131,11 @@ export const updateRedemptionStatus = async (
       );
     }
 
-    if (status === "delivered") updates.redeemed_at = new Date();
+    if (status === "delivered") {
+      updates.delivered_by = req.user?.id;
+      updates.redeemed_at = new Date();
+    }
+    if (image) updates.image = image;
     if (req.body.notes) updates.notes = req.body.notes;
 
     await redemption.update(updates);
@@ -133,8 +145,14 @@ export const updateRedemptionStatus = async (
         ? `Tu canje del ${prize?.name} fue cancelado , se te devolvieron ${redemption.points_spent} pst`
         : `Tu canje de "${prize?.name}" fue actualizado a: ${status}`;
     await createNotification(redemption.user_id, msg, "info");
-    res.json({ message: "Estado actualizado", redemption });
+    res.json({
+      message: "Estado actualizado",
+      redemption,
+      fileUrl: req.uploadedFile,
+    });
   } catch (err) {
+    console.log(err);
+
     res.status(500).json({ message: "Error", error: err });
   }
 };

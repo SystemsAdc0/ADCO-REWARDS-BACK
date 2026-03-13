@@ -18,8 +18,7 @@ interface PrizeCreationAttributes extends Optional<
   PrizeAttributes,
   "id" | "image" | "status"
 > {}
-
-class Prize
+ class Prize
   extends Model<PrizeAttributes, PrizeCreationAttributes>
   implements PrizeAttributes
 {

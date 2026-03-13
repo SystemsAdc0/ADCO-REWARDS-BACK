@@ -8,7 +8,6 @@ export const authenticate = (
   next: NextFunction,
 ): void => {
   const authHeader = req.headers.authorization;
-  console.log("----------------------");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     res.status(401).json({ message: "Token no proporcionado" });
     return;
@@ -21,7 +20,6 @@ export const authenticate = (
       token,
       process.env.JWT_SECRET as string,
     ) as JwtPayload;
-    console.log(decoded);
 
     req.user = decoded;
     next();

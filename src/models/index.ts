@@ -19,7 +19,7 @@ Prize.hasMany(Redemption, { foreignKey: "prize_id", as: "redemptions" });
 // Redemption associations
 Redemption.belongsTo(User, { foreignKey: "user_id", as: "user" });
 Redemption.belongsTo(Prize, { foreignKey: "prize_id", as: "prize" });
-
+Redemption.belongsTo(User, { foreignKey: "delivered_by", as: "delivered" });
 // PointHistory associations
 PointHistory.belongsTo(User, { foreignKey: "user_id", as: "user" });
 PointHistory.belongsTo(User, { foreignKey: "assigned_by", as: "assigner" });

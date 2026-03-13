@@ -21,14 +21,14 @@ export const getSummary = async (_req: AuthRequest, res: Response): Promise<void
     res.json({ totalUsers, totalPrizes, totalRedemptions, pendingEntries, pendingRedemptions, totalPointsInCirculation });
   } catch (err) {
     res.status(500).json({ message: 'Error', error: err });
-  }
+  } 
 };
 
 export const getTopUsers = async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const users = await User.findAll({
+    const users = await User.findAll({ 
       where: { role: 'user', status: 'active' },
-      attributes: { exclude: ['password'] },
+      attributes: { exclude: ['password'] }, 
       order: [['points', 'DESC']],
       limit: 10,
     });

@@ -1,6 +1,6 @@
-import { Request } from 'express';
+import { Request } from "express";
 
-export type UserRole = 'admin' | 'moderator' | 'user' | 'visitor';
+export type UserRole = "admin" | "moderator" | "user" | "visitor";
 
 export interface JwtPayload {
   id: number;
@@ -11,9 +11,23 @@ export interface JwtPayload {
 export interface AuthRequest extends Request {
   user?: JwtPayload;
 }
+export interface UploadedFile {
+  url: string;
+  objectName: string;
+  publicUrl: string;
+}
 
-export type RedemptionStatus = 'pending' | 'approved' | 'delivered' | 'rejected';
-export type ActivityEntryStatus = 'pending' | 'approved' | 'rejected';
-export type ActivityStatus = 'active' | 'inactive' | 'finished';
-export type PrizeStatus = 'active' | 'inactive';
-export type UserStatus = 'active' | 'inactive';
+export interface AuthRequestFile extends Request {
+  uploadedFile?: UploadedFile;
+  user?: JwtPayload;
+}
+
+export type RedemptionStatus =
+  | "pending"
+  | "approved"
+  | "delivered"
+  | "rejected";
+export type ActivityEntryStatus = "pending" | "approved" | "rejected";
+export type ActivityStatus = "active" | "inactive" | "finished";
+export type PrizeStatus = "active" | "inactive";
+export type UserStatus = "active" | "inactive";

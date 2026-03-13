@@ -10,6 +10,8 @@ interface RedemptionAttributes {
   status: RedemptionStatus;
   points_spent: number;
   notes?: string;
+  image?: string;
+  delivered_by?: number;
   redeemed_at?: Date;
   created_at?: Date;
   updated_at?: Date;
@@ -30,6 +32,8 @@ class Redemption
   public status!: RedemptionStatus;
   public points_spent!: number;
   public notes?: string;
+  public image?: string;
+  public delivered_by?: number;
   public redeemed_at?: Date;
   public user?: User;
   public readonly created_at!: Date;
@@ -51,6 +55,8 @@ Redemption.init(
     },
     points_spent: { type: DataTypes.INTEGER, allowNull: false },
     notes: { type: DataTypes.TEXT, allowNull: true },
+    image: { type: DataTypes.TEXT, allowNull: true },
+    delivered_by: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
     redeemed_at: { type: DataTypes.DATE, allowNull: true },
   },
   {

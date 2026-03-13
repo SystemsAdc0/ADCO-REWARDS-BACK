@@ -9,7 +9,9 @@ export const authorize = (...roles: UserRole[]) => {
         return;
       }
       if (!roles.includes(req.user.role)) {
-        console.log(roles, req.user.role);
+        console.log(
+          `la ruta solo deja pasar: ${roles} tipo de usuario: ${req.user.role}`,
+        );
 
         res
           .status(403)
