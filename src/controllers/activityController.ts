@@ -77,7 +77,6 @@ export const createActivity = async (
         name: s.name,
       });
     }
-
     res.status(201).json(activity);
   } catch (err) {
     console.log(err);
