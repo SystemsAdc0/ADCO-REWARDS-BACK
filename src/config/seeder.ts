@@ -3,6 +3,7 @@ dotenv.config();
 import sequelize from "./database";
 import { User, Prize, Activity, ActivityEntry, PointHistory } from "../models";
 import bcrypt from "bcryptjs";
+import Agreement from "../models/Agreement";
 
 async function seed() {
   try {
@@ -112,6 +113,13 @@ async function seed() {
         status: "active",
       },
     ]);
+
+    await Agreement.create({
+      name: "prueba de aflicioaon",
+      image: "link de la publicacioon",
+      description: "descripcion de la publicacion ",
+      page: "link de la pagina",
+    });
     console.log("Usuarios creados.");
 
     // Crear premios
@@ -176,6 +184,7 @@ async function seed() {
           "Asiste a la capacitacion mensual del equipo y gana puntos",
         points_reward: 100,
         start_date: now,
+        category: "social",
         image:
           "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         end_date: future,
@@ -186,6 +195,7 @@ async function seed() {
         description: "Completa la encuesta de satisfaccion del trimestre",
         points_reward: 50,
         start_date: now,
+        category: "social",
         image:
           "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         end_date: future,
@@ -194,6 +204,7 @@ async function seed() {
       {
         name: "Referir un Colega",
         description: "Refiere a un nuevo miembro al programa y gana puntos",
+        category: "social",
         image:
           "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         points_reward: 200,

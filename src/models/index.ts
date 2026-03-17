@@ -6,7 +6,7 @@ import Activity from "./Activity";
 import ActivityEntry from "./ActivityEntry";
 import Notification from "./Notification";
 import SocialMedia from "./SocialMedia";
-
+import Agreement from "./Agreement";
 // User associations
 User.hasMany(Redemption, { foreignKey: "user_id", as: "redemptions" });
 User.hasMany(PointHistory, { foreignKey: "user_id", as: "pointHistory" });
@@ -55,4 +55,5 @@ export {
   Activity,
   ActivityEntry,
   Notification,
+  Agreement,
 };

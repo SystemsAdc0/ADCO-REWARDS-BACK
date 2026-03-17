@@ -19,17 +19,23 @@ import pointRoutes from "./routes/points";
 import notificationRoutes from "./routes/notifications";
 import reportRoutes from "./routes/reports";
 import googleFiles from "./routes/googleCloud";
+import agreements from "./routes/Agreements";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 // Middlewares globales
-app.use(cors({ origin: "https://lkn26fdp-5173.usw3.devtunnels.ms", credentials: true }));
+app.use(
+  cors({
+    origin: "https://lkn26fdp-5173.usw3.devtunnels.ms",
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Logger de requests
-app.use((req, res, next) => { 
+app.use((req, res, next) => {
   const start = Date.now();
   res.on("finish", () => {
     const ms = Date.now() - start;
@@ -67,7 +73,7 @@ app.use("/api/points", pointRoutes);
 app.use("/api/file", googleFiles);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/reports", reportRoutes);
-
+app.use("/api/agreements", agreements);
 // Health check
 app.get("/health", (_req, res) =>
   res.json({ status: "ok", timestamp: new Date() }),
@@ -80,7 +86,7 @@ async function start() {
     console.log("Conexion a MySQL establecida.");
 
     // await sequelize.sync({ alter: true });
-    await sequelize.sync();
+    await sequelize.sync({ force: true });
     console.log("Modelos sincronizados.");
     const server = app.listen(PORT, () => {
       console.log(`Servidor corriendo en http://localhost:${PORT}`);
