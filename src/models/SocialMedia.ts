@@ -4,7 +4,7 @@ import sequelize from "../config/database";
 interface SocialMediaAttributes {
   id: number;
   activity_id: number;
-  name: "whatsapp" | "instagram" | "teams" | "platform";
+  name: "whatsapp" | "instagram" | "engage" | "platform";
 }
 
 interface SocialMediaCreationAttributes extends Optional<
@@ -18,7 +18,7 @@ class SocialMedia
 {
   public id!: number;
   public activity_id!: number;
-  public name!: "whatsapp" | "instagram" | "teams" | "platform";
+  public name!: "whatsapp" | "instagram" | "engage" | "platform";
 }
 
 SocialMedia.init(
@@ -37,7 +37,7 @@ SocialMedia.init(
       },
     },
     name: {
-      type: DataTypes.ENUM("whatsapp", "instagram", "teams", "platform"),
+      type: DataTypes.ENUM("whatsapp", "instagram", "engage", "platform"),
       allowNull: false,
       defaultValue: "platform",
     },

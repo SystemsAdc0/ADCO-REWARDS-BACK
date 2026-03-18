@@ -184,7 +184,7 @@ async function seed() {
           "Asiste a la capacitacion mensual del equipo y gana puntos",
         points_reward: 100,
         start_date: now,
-        category: "social",
+        category: "social_media",
         image:
           "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         end_date: future,
@@ -195,7 +195,7 @@ async function seed() {
         description: "Completa la encuesta de satisfaccion del trimestre",
         points_reward: 50,
         start_date: now,
-        category: "social",
+        category: "other",
         image:
           "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         end_date: future,
@@ -204,7 +204,7 @@ async function seed() {
       {
         name: "Referir un Colega",
         description: "Refiere a un nuevo miembro al programa y gana puntos",
-        category: "social",
+        category: "informational",
         image:
           "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         points_reward: 200,
