@@ -11,7 +11,7 @@ interface SocialMediaCreationAttributes extends Optional<
   SocialMediaAttributes,
   "id"
 > {}
-
+ 
 class SocialMedia
   extends Model<SocialMediaAttributes, SocialMediaCreationAttributes>
   implements SocialMediaAttributes

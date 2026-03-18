@@ -30,7 +30,7 @@ router.put(
   "/:id/status",
   authenticate,
   authorize("admin", "moderator"),
-  redemptionsUpload,
+  // redemptionsUpload,
   updateRedemptionStatus,
 );
 
