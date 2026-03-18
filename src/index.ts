@@ -22,13 +22,13 @@ import googleFiles from "./routes/googleCloud";
 import agreements from "./routes/Agreements";
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 4000; 
 
 // Middlewares globales
 app.use(
   cors({
-    origin: "https://lkn26fdp-5173.usw3.devtunnels.ms",
-    credentials: true,
+    origin: process.env.ORIGIN,
+    credentials: true, 
   }),
 );
 app.use(express.json());
@@ -64,6 +64,7 @@ app.use(
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // API Routes
+
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/prizes", prizeRoutes);

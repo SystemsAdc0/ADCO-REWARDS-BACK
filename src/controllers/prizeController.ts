@@ -57,7 +57,15 @@ export const updatePrize = async (
       res.status(404).json({ message: "Premio no encontrado" });
       return;
     }
+
     const { name, description, points_required, stock, status } = req.body;
+    console.log({
+      name,
+      description,
+      points_required,
+      stock,
+      status,
+    });
     const image =
       (req.file as Express.Multer.File | undefined)?.filename || prize.image;
     await prize.update({
