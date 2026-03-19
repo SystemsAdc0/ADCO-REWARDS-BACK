@@ -11,7 +11,7 @@ import { authorize } from "../middlewares/authorize";
 import { deleteAgreementImage } from "../controllers/googleCloudController";
 
 const router = Router();
-router.get("/", authenticate, authorize("admin", "user"), getAgreement);
+router.get("/", authenticate, authorize("admin", "user", "moderator"), getAgreement);
 router.get(
   "/:id",
   authenticate,
