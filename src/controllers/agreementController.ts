@@ -7,7 +7,9 @@ export const getAgreement = async (
 ): Promise<void> => {
   try {
     const agreements = await Agreement.findAll({
-      attributes: { exclude: ["description", "page"] },
+      attributes: {
+        exclude: req.user?.role === "admin" ? [] : ["description", "page"],
+      },
     });
     res.status(200).json(agreements);
   } catch (err) {
