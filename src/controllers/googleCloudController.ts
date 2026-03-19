@@ -75,7 +75,7 @@ export const redemptionsUpload = async (
 ): Promise<void> => {
   try {
     const { filename, contentType } = req.body;
-    if (!filename || !contentType) next();
+    if (!filename || !contentType) return next();
     const ext = filename.split(".").pop()?.toLowerCase() || "bin";
     const objectName = `redemptions/${Date.now()}-${crypto.randomUUID()}.${ext}`;
     const file = bucketPublic.file(objectName);
