@@ -23,7 +23,7 @@ interface PrizeCreationAttributes extends Optional<
   implements PrizeAttributes
 {
   public id!: number;
-  public name!: string;
+  public name!: string; 
   public description!: string;
   public image!: string;
   public points_required!: number;
