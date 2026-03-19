@@ -24,7 +24,12 @@ router.get(
   authorize("user", "admin", "moderator"),
   getWinners,
 );
-router.get("/my", authenticate, authorize("user","moderator"), getMyRedemptions);
+router.get(
+  "/my",
+  authenticate,
+  authorize("user", "moderator"),
+  getMyRedemptions,
+);
 router.get(
   "/",
   authenticate,
@@ -35,7 +40,7 @@ router.put(
   "/:id/status",
   authenticate,
   authorize("admin", "moderator"),
-  // redemptionsUpload,
+  redemptionsUpload,
   updateRedemptionStatus,
 );
 
