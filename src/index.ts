@@ -19,7 +19,7 @@ import pointRoutes from "./routes/points";
 import notificationRoutes from "./routes/notifications";
 import reportRoutes from "./routes/reports";
 import googleFiles from "./routes/googleCloud";
-import agreements from "./routes/Agreements";
+import agreements from "./routes/agreements";
 
 const app = express();
 const PORT = process.env.PORT || 4000; 
