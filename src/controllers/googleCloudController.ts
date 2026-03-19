@@ -71,28 +71,23 @@ export const activityCloud = async (
 export const redemptionsUpload = async (
   req: AuthRequestFile,
   res: Response,
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { filename, contentType } = req.body;
-    if (!filename || !contentType) {
-      res.status(404).json({ message: "imagen no encontrada" });
-      return;
-    }
+    if (!filename || !contentType) next();
     const ext = filename.split(".").pop()?.toLowerCase() || "bin";
     const objectName = `redemptions/${Date.now()}-${crypto.randomUUID()}.${ext}`;
-
     const file = bucketPublic.file(objectName);
-
     const [url] = await file.getSignedUrl({
       version: "v4",
       action: "write",
       expires: Date.now() + 5 * 60 * 1000,
       contentType,
     });
-
     const publicUrl = `https://storage.googleapis.com/${bucketPublic.name}/${objectName}`;
-
-    res.json({ url, objectName, publicUrl });
+    req.uploadedFile = { url, objectName, publicUrl };
+    next();
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Error generando signed upload URL" });
