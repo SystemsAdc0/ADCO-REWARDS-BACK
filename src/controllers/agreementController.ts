@@ -6,13 +6,25 @@ export const getAgreement = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const agreements = await Agreement.findAll();
+    const agreements = await Agreement.findAll({
+      attributes: { exclude: ["description", "page"] },
+    });
     res.status(200).json(agreements);
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
   }
 };
-
+export const getAgreementByID = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const agreements = await Agreement.findByPk(String(req.params.id));
+    res.status(200).json(agreements);
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
 export const updateAgreement = async (req: AuthRequest, res: Response) => {
   try {
     const agreement = await Agreement.findByPk(String(req.params.id));
