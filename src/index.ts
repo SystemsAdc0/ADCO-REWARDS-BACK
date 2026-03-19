@@ -22,13 +22,13 @@ import googleFiles from "./routes/googleCloud";
 import agreements from "./routes/agreements";
 
 const app = express();
-const PORT = process.env.PORT || 4000; 
+const PORT = process.env.PORT || 4000;
 
 // Middlewares globales
 app.use(
   cors({
     origin: process.env.ORIGIN,
-    credentials: true, 
+    credentials: true,
   }),
 );
 app.use(express.json());

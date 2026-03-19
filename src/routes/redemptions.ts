@@ -12,14 +12,19 @@ import { redemptionsUpload } from "../controllers/googleCloudController";
 
 const router = Router();
 
-router.post("/", authenticate, authorize("user"), createRedemption);
+router.post(
+  "/",
+  authenticate,
+  authorize("user", "moderator"),
+  createRedemption,
+);
 router.get(
   "/winners",
   authenticate,
   authorize("user", "admin", "moderator"),
   getWinners,
 );
-router.get("/my", authenticate, authorize("user"), getMyRedemptions);
+router.get("/my", authenticate, authorize("user","moderator"), getMyRedemptions);
 router.get(
   "/",
   authenticate,
