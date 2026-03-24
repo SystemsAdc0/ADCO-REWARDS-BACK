@@ -4,6 +4,7 @@ import {
   createActivity,
   updateActivity,
   deleteActivity,
+  toggleActivityStatus,
   joinActivity,
   getEntries,
   reviewEntry,
@@ -26,6 +27,7 @@ router.get(
 
 router.post("/", authenticate, authorize("admin"), createActivity);
 router.put("/:id", authenticate, authorize("admin"), updateActivity);
+router.patch("/:id/toggle", authenticate, authorize("admin"), toggleActivityStatus);
 router.delete("/:id", authenticate, authorize("admin"), deleteActivity);
 router.post(
   "/:id/join",

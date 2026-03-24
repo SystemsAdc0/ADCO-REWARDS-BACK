@@ -24,7 +24,7 @@ class Notification
   public read!: boolean;
   public readonly created_at!: Date;
 }
-
+ 
 Notification.init(
   {
     id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },

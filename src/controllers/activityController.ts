@@ -1,6 +1,12 @@
 import { Request, Response } from "express";
 import { AuthRequest } from "../types";
-import { Activity, ActivityEntry, User, PointHistory } from "../models";
+import {
+  Activity,
+  ActivityEntry,
+  User,
+  PointHistory,
+  Redemption,
+} from "../models";
 import { createNotification } from "../services/notificationService";
 import { Sequelize } from "sequelize";
 import SocialMedia from "../models/SocialMedia";
@@ -15,17 +21,21 @@ export const getActivities = async (
       res.status(403).json("usuario no identificado");
       return;
     }
+
     const activities = await Activity.findAll({
       attributes: {
         include: [
           [
-            Sequelize.literal(`EXISTS (
-          SELECT 1
-          FROM activity_entries ae
-          WHERE ae.activity_id = Activity.id
-          AND ae.user_id = ${user.id}
-        )`),
+            Sequelize.literal(
+              `EXISTS (SELECT 1 FROM activity_entries ae WHERE ae.activity_id = Activity.id AND ae.user_id = ${user.id})`,
+            ),
             "participate",
+          ],
+          [
+            Sequelize.literal(
+              `(SELECT ae.review_notes FROM activity_entries ae WHERE ae.activity_id = Activity.id AND ae.user_id = ${user.id} LIMIT 1)`,
+            ),
+            "note",
           ],
         ],
       },
@@ -34,9 +44,10 @@ export const getActivities = async (
         as: "social_medias",
         attributes: ["name"],
       },
-      where: { status: "active" },
+      where: user.role == "admin" ? {} : { status: "active" },
       order: [["start_date", "ASC"]],
     });
+    console.log(activities);
 
     res.json(activities);
   } catch (err) {
@@ -97,6 +108,27 @@ export const updateActivity = async (
     }
     await activity.update(req.body);
     res.json(activity);
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const toggleActivityStatus = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const activity = await Activity.findByPk(String(req.params.id));
+    if (!activity) {
+      res.status(404).json({ message: "Actividad no encontrada" });
+      return;
+    }
+    const newStatus = activity.status === "active" ? "inactive" : "active";
+    await activity.update({ status: newStatus });
+    res.json({
+      message: `Actividad ${newStatus === "active" ? "activada" : "desactivada"}`,
+      status: newStatus,
+    });
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
   }
