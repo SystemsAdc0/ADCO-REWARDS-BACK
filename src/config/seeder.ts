@@ -4,6 +4,7 @@ import sequelize from "./database";
 import { User, Prize, Activity, ActivityEntry, PointHistory } from "../models";
 import bcrypt from "bcryptjs";
 import Agreement from "../models/Agreement";
+import AgreementImage from "../models/AgreementImage";
 
 async function seed() {
   try {
@@ -114,13 +115,19 @@ async function seed() {
       },
     ]);
 
-    await Agreement.create({
-      name: "prueba de aflicioaon",
-      image: "link de la publicacioon",
-      description: "descripcion de la publicacion ",
-      page: "link de la pagina",
+    const agreement = await Agreement.create({
+      name: "Convenio de ejemplo",
+      description: "Descripcion del convenio de ejemplo",
+      page: "https://ejemplo.com",
     });
-    console.log("Usuarios creados.");
+    await AgreementImage.create({
+      agreement_id: agreement.id,
+      url: "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
+      object_name: "seed-logo-convenio.jpg",
+      is_logo: true,
+      position: 0,
+    });
+    console.log("Usuarios y convenios creados.");
 
     // Crear premios
     await Prize.bulkCreate([

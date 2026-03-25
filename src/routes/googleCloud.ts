@@ -7,10 +7,10 @@ import {
   redemptionsUpload,
 } from "../controllers/googleCloudController";
 
-const router = Router();
+const router = Router(); 
 router.post("/activity-entrie-signed-upload", googleActivityEntries);
 router.post("/activity-single-upload", activityCloud);
 router.post("/agreement-single-upload", agreementUpload);
 router.post("/download", getActivityFile);
 export default router;
- 
+  

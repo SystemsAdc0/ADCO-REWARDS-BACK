@@ -10,6 +10,7 @@ import {
 import { createNotification } from "../services/notificationService";
 import { Sequelize } from "sequelize";
 import SocialMedia from "../models/SocialMedia";
+import { deleteActivityEntryFile } from "./googleCloudController";
 
 export const getActivities = async (
   req: AuthRequest,
@@ -27,13 +28,13 @@ export const getActivities = async (
         include: [
           [
             Sequelize.literal(
-              `EXISTS (SELECT 1 FROM activity_entries ae WHERE ae.activity_id = Activity.id AND ae.user_id = ${user.id})`,
+              `EXISTS (SELECT 1 FROM activity_entries ae WHERE ae.activity_id = Activity.id AND ae.user_id = ${user.id} AND ae.status != 'rejected')`,
             ),
             "participate",
           ],
           [
             Sequelize.literal(
-              `(SELECT ae.review_notes FROM activity_entries ae WHERE ae.activity_id = Activity.id AND ae.user_id = ${user.id} LIMIT 1)`,
+              `(SELECT ae.review_notes FROM activity_entries ae WHERE ae.activity_id = Activity.id AND ae.user_id = ${user.id} AND ae.status = 'rejected' ORDER BY ae.updated_at DESC LIMIT 1)`,
             ),
             "note",
           ],
@@ -241,6 +242,19 @@ export const reviewEntry = async (
     }
 
     const { status, review_notes } = req.body;
+
+    // La razon de rechazo es obligatoria
+    if (status === "rejected") {
+      if (!review_notes || String(review_notes).trim() === "") {
+        res.status(400).json({ message: "La razon de rechazo es obligatoria" });
+        return;
+      }
+      // Eliminar el archivo de Google Cloud Storage para que el usuario pueda re-subir
+      if (entry.file) {
+        await deleteActivityEntryFile(entry.file);
+      }
+    }
+
     await entry.update({ status, reviewed_by: req.user!.id, review_notes });
 
     if (status === "approved") {
@@ -268,7 +282,7 @@ export const reviewEntry = async (
     } else {
       await createNotification(
         entry.user_id,
-        `Tu participacion fue rechazada. ${review_notes || ""}`,
+        `Tu participacion en "${(entry as any).activity?.name}" fue rechazada. Motivo: ${review_notes}`,
         "warning",
       );
     }

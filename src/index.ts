@@ -3,6 +3,7 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
+import rateLimit from "express-rate-limit";
 import path from "path";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
@@ -20,9 +21,27 @@ import notificationRoutes from "./routes/notifications";
 import reportRoutes from "./routes/reports";
 import googleFiles from "./routes/googleCloud";
 import agreements from "./routes/agreements";
+import pointRequests from "./routes/pointRequests";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+
+// Rate limiters
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Demasiadas solicitudes, intenta más tarde." },
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Demasiados intentos de acceso, intenta en 15 minutos." },
+});
 
 // Middlewares globales
 app.use(
@@ -33,6 +52,7 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(globalLimiter);
 
 // Logger de requests
 app.use((req, res, next) => {
@@ -65,7 +85,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // API Routes
 
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/prizes", prizeRoutes);
 app.use("/api/redemptions", redemptionRoutes);
@@ -75,6 +95,7 @@ app.use("/api/file", googleFiles);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/agreements", agreements);
+app.use("/api/point-requests", pointRequests);
 // Health check
 app.get("/health", (_req, res) =>
   res.json({ status: "ok", timestamp: new Date() }),
@@ -86,8 +107,7 @@ async function start() {
     await sequelize.authenticate();
     console.log("Conexion a MySQL establecida.");
 
-    // await sequelize.sync({ alter: true });
-    await sequelize.sync();
+    await sequelize.sync({ alter: true });
     console.log("Modelos sincronizados.");
     const server = app.listen(PORT, () => {
       console.log(`Servidor corriendo en http://localhost:${PORT}`);
@@ -110,3 +130,4 @@ async function start() {
 }
 
 start();
+ 

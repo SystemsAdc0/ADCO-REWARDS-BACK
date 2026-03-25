@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, me } from '../controllers/authController';
+import { register, login, me, changePassword } from '../controllers/authController';
 import { authenticate } from '../middlewares/authenticate';
 import { authorize } from '../middlewares/authorize';
 
@@ -65,5 +65,29 @@ router.post('/login', login);
  *       200: { description: Datos del usuario }
  */
 router.get('/me', authenticate, me);
+
+/**
+ * @swagger
+ * /api/auth/change-password:
+ *   put:
+ *     summary: Cambiar contraseña del usuario autenticado
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [currentPassword, newPassword]
+ *             properties:
+ *               currentPassword: { type: string }
+ *               newPassword: { type: string, minLength: 6 }
+ *     responses:
+ *       200: { description: Contraseña actualizada }
+ *       401: { description: Contraseña actual incorrecta }
+ */
+router.put('/change-password', authenticate, changePassword);
 
 export default router;

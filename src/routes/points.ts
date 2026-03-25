@@ -9,3 +9,4 @@ router.get('/history', authenticate, authorize('user', 'admin', 'moderator'), ge
 router.get('/history/:userId', authenticate, authorize('admin'), getUserHistory);
 
 export default router;
+   

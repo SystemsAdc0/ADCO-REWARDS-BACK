@@ -161,36 +161,19 @@ export const getActivityFile = async (req: AuthRequest, res: Response) => {
   res.json({ url });
 };
 
-export const deleteAgreementImage = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) => {
+/**
+ * Elimina un archivo de activity_entries del bucket privado.
+ * Se usa al rechazar una participación para liberar espacio y permitir re-envío.
+ */
+export const deleteActivityEntryFile = async (objectName: string): Promise<void> => {
+  if (!objectName) return;
   try {
-    const agreement = await Agreement.findByPk(String(req.params.id));
-
-    if (!agreement) {
-      return res.status(404).json({ message: "Agreement no encontrado" });
+    await bucket.file(objectName).delete();
+  } catch (err: any) {
+    // Si el archivo no existe simplemente lo ignoramos
+    if (err?.code !== 404) {
+      console.error("Error eliminando archivo de GCS:", err);
     }
-
-    const image = agreement.dataValues.image;
-
-    if (!image) return next();
-
-    let objectName = image;
-
-    if (image.startsWith("https://storage.googleapis.com/")) {
-      const url = new URL(image);
-      objectName = decodeURIComponent(
-        url.pathname.replace(`/${bucketPublic.name}/`, ""),
-      );
-    }
-
-    await bucketPublic.file(objectName).delete();
-
-    next();
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error eliminando imagen del bucket" });
   }
 };
+

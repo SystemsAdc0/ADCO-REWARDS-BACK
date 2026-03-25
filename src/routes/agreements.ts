@@ -6,26 +6,16 @@ import {
   getAgreement,
   getAgreementByID,
   updateAgreement,
+  deleteAgreementImageById,
 } from "../controllers/agreementController";
 import { authorize } from "../middlewares/authorize";
-import { deleteAgreementImage } from "../controllers/googleCloudController";
 
 const router = Router();
 router.get("/", authenticate, authorize("admin", "user", "moderator"), getAgreement);
-router.get(
-  "/:id",
-  authenticate,
-  authorize("admin", "user", "moderator"),
-  getAgreementByID,
-);
+router.get("/:id", authenticate, authorize("admin", "user", "moderator"), getAgreementByID);
 router.put("/:id", authenticate, authorize("admin"), updateAgreement);
 router.post("/", authenticate, authorize("admin"), createAgreement);
-router.delete(
-  "/:id",
-  authenticate,
-  authorize("admin"),
-  deleteAgreementImage,
-  deleteAgreement,
-);
+router.delete("/:id/images/:imageId", authenticate, authorize("admin"), deleteAgreementImageById);
+router.delete("/:id", authenticate, authorize("admin"), deleteAgreement);
 
 export default router;

@@ -7,6 +7,8 @@ import ActivityEntry from "./ActivityEntry";
 import Notification from "./Notification";
 import SocialMedia from "./SocialMedia";
 import Agreement from "./Agreement";
+import AgreementImage from "./AgreementImage";
+import PointRequest from "./PointRequest";
 // User associations
 User.hasMany(Redemption, { foreignKey: "user_id", as: "redemptions" });
 User.hasMany(PointHistory, { foreignKey: "user_id", as: "pointHistory" });
@@ -37,6 +39,13 @@ ActivityEntry.belongsTo(User, { foreignKey: "reviewed_by", as: "reviewer" });
 
 // Notification associations
 Notification.belongsTo(User, { foreignKey: "user_id", as: "user" });
+
+// PointRequest associations
+PointRequest.belongsTo(User, { foreignKey: "requester_id", as: "requester" });
+PointRequest.belongsTo(User, { foreignKey: "target_id", as: "target" });
+User.hasMany(PointRequest, { foreignKey: "requester_id", as: "sentRequests" });
+User.hasMany(PointRequest, { foreignKey: "target_id", as: "receivedRequests" });
+
 //Social Media
 Activity.hasMany(SocialMedia, {
   foreignKey: "activity_id",
@@ -47,6 +56,11 @@ SocialMedia.belongsTo(Activity, {
   foreignKey: "activity_id",
   as: "activity",
 });
+
+// AgreementImage associations
+Agreement.hasMany(AgreementImage, { foreignKey: "agreement_id", as: "images", onDelete: "CASCADE" });
+AgreementImage.belongsTo(Agreement, { foreignKey: "agreement_id", as: "agreement" });
+
 export {
   User,
   Prize,
@@ -56,4 +70,6 @@ export {
   ActivityEntry,
   Notification,
   Agreement,
+  AgreementImage,
+  PointRequest,
 };

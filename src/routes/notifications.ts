@@ -9,3 +9,4 @@ router.put('/read-all', authenticate, markAllAsRead);
 router.put('/:id/read', authenticate, markAsRead);
 
 export default router;
+ 

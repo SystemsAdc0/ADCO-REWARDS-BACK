@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { AuthRequest } from "../types";
-import { User, Prize, Redemption, ActivityEntry } from "../models";
+import { User, Prize, Redemption, ActivityEntry, PointRequest } from "../models";
 import sequelize from "../config/database";
 import { Op, QueryTypes } from "sequelize";
 
@@ -50,6 +50,35 @@ export const getTopUsers = async (
       limit: 10,
     });
     res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const getPendingCounts = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const role = req.user?.role;
+    const userId = req.user?.id;
+
+    let pendingEntries = 0;
+    let pendingRedemptions = 0;
+    let pendingPointRequests = 0;
+
+    if (role === "admin" || role === "moderator") {
+      pendingEntries = await ActivityEntry.count({ where: { status: "pending" } });
+      pendingRedemptions = await Redemption.count({ where: { status: "pending" } });
+    }
+
+    if (userId) {
+      pendingPointRequests = await PointRequest.count({
+        where: { target_id: userId, status: "pending" },
+      });
+    }
+
+    res.json({ pendingEntries, pendingRedemptions, pendingPointRequests });
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
   }

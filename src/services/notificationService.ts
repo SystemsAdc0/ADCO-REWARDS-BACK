@@ -9,3 +9,4 @@ export const createNotification = async (
 ) => {
   return Notification.create({ user_id, message, type });
 };
+ 

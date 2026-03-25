@@ -6,6 +6,9 @@ import {
   deleteUser,
   addPoints,
   updateUserAavatar,
+  togglePointRequestPermission,
+  getUserFullHistory,
+  getUserDirectory,
 } from "../controllers/userController";
 import { authenticate } from "../middlewares/authenticate";
 import { authorize } from "../middlewares/authorize";
@@ -40,6 +43,7 @@ router.get("/", authenticate, authorize("admin"), getUsers);
  *     responses:
  *       200: { description: Datos del usuario }
  */
+router.get("/directory", authenticate, getUserDirectory);
 router.get("/:id", authenticate, authorize("admin"), getUserById);
 
 /**
@@ -91,5 +95,7 @@ router.put("/:id", authenticate, authorize("admin"), updateUser);
  *       200: { description: Puntos agregados }
  */
 router.post("/:id/add-points", authenticate, authorize("admin"), addPoints);
+router.patch("/:id/toggle-point-request", authenticate, authorize("admin"), togglePointRequestPermission);
+router.get("/:id/full-history", authenticate, authorize("admin"), getUserFullHistory);
 router.delete("/:id", authenticate, authorize("admin"), deleteUser);
 export default router;

@@ -150,10 +150,14 @@ export const updateRedemptionStatus = async (
       const userPoints = redemption.user.points;
       const redemptionPoint = redemption.points_spent;
       const reassignedPoint = userPoints + redemptionPoint;
-      //regresamos los puntos al usuario dado este sea rechazado
       await User.update(
         { points: reassignedPoint },
         { where: { id: redemption.user_id } },
+      );
+      // Restaurar stock del premio
+      await Prize.update(
+        { stock: Sequelize.literal("stock + 1") as any },
+        { where: { id: redemption.prize_id } },
       );
     }
 

@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { AuthRequest } from "../types";
-import { User, PointHistory } from "../models";
+import { User, PointHistory, ActivityEntry, Redemption, Activity, Prize } from "../models";
 import { createNotification } from "../services/notificationService";
 
 export const getUsers = async (
@@ -105,6 +105,73 @@ export const addPoints = async (
       message: "Puntos agregados",
       total_points: user.points + points,
     });
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const togglePointRequestPermission = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const user = await User.findByPk(String(req.params.id));
+    if (!user) {
+      res.status(404).json({ message: "Usuario no encontrado" });
+      return;
+    }
+    await user.update({ can_request_points: !user.can_request_points });
+    res.json({ can_request_points: user.can_request_points });
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const getUserFullHistory = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = String(req.params.id);
+
+    const [pointHistory, activityEntries, redemptions] = await Promise.all([
+      PointHistory.findAll({
+        where: { user_id: userId },
+        order: [["created_at", "DESC"]],
+        include: [{ model: User, as: "assigner", attributes: ["id", "name"] }],
+      }),
+      ActivityEntry.findAll({
+        where: { user_id: userId },
+        order: [["created_at", "DESC"]],
+        include: [
+          { model: Activity, as: "activity", attributes: ["id", "name", "points_reward"] },
+          { model: User, as: "reviewer", attributes: ["id", "name"] },
+        ],
+      }),
+      Redemption.findAll({
+        where: { user_id: userId },
+        order: [["created_at", "DESC"]],
+        include: [{ model: Prize, as: "prize", attributes: ["id", "name", "points_required"] }],
+      }),
+    ]);
+
+    res.json({ pointHistory, activityEntries, redemptions });
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const getUserDirectory = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const users = await User.findAll({
+      where: { status: "active" },
+      attributes: ["id", "name", "email", "avatar", "points"],
+      order: [["name", "ASC"]],
+    });
+    res.json(users);
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
   }

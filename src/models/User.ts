@@ -11,13 +11,16 @@ interface UserAttributes {
   points: number;
   status: UserStatus;
   avatar?: string;
+  can_request_points?: boolean;
+  birth_date?: string;
+  company?: string;
   created_at?: Date;
   updated_at?: Date;
 }
 
 interface UserCreationAttributes extends Optional<
   UserAttributes,
-  "id" | "points" | "status" | "avatar"
+  "id" | "points" | "status" | "avatar" | "can_request_points" | "birth_date" | "company"
 > {}
 
 class User
@@ -32,6 +35,9 @@ class User
   public points!: number;
   public status!: UserStatus;
   public avatar?: string;
+  public can_request_points?: boolean;
+  public birth_date?: string;
+  public company?: string;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -57,6 +63,9 @@ User.init(
       defaultValue: "active",
     },
     avatar: { type: DataTypes.STRING(255), allowNull: true },
+    can_request_points: { type: DataTypes.BOOLEAN, defaultValue: false },
+    birth_date: { type: DataTypes.DATEONLY, allowNull: true },
+    company: { type: DataTypes.STRING(100), allowNull: true },
   },
   {
     sequelize,
