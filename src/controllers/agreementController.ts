@@ -53,8 +53,26 @@ export const updateAgreement = async (req: AuthRequest, res: Response) => {
       res.status(404).json({ message: "Convenio no encontrado" });
       return;
     }
-    const { name, description, page, maps_url, gallery } = req.body;
+    const { name, description, page, maps_url, logo, gallery } = req.body;
     await agreement.update({ name, description, page, maps_url });
+
+    // Replace logo if a new one was provided
+    if (logo?.url && logo?.objectName) {
+      const oldLogo = await AgreementImage.findOne({
+        where: { agreement_id: agreement.id, is_logo: true },
+      });
+      if (oldLogo) {
+        await deleteObjectFromGCS(oldLogo.object_name);
+        await oldLogo.destroy();
+      }
+      await AgreementImage.create({
+        agreement_id: agreement.id,
+        url: logo.url,
+        object_name: logo.objectName,
+        is_logo: true,
+        position: 0,
+      });
+    }
 
     // Add new gallery images if provided
     if (Array.isArray(gallery) && gallery.length > 0) {

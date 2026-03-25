@@ -3,6 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import { Storage } from "@google-cloud/storage";
 import { AuthRequest, AuthRequestFile } from "../types";
 import { Agreement } from "../models";
+import sharp from "sharp";
 
 const storage = new Storage({
   credentials: JSON.parse(process.env.GCP_KEY as string),
@@ -18,26 +19,19 @@ export const prizeCloud = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { filename, contentType } = req.body;
-
-    const ext = filename.split(".").pop()?.toLowerCase() || "bin";
-    const objectName = `prizes/${Date.now()}-${crypto.randomUUID()}.${ext}`;
-
-    const file = bucketPublic.file(objectName);
-
-    const [url] = await file.getSignedUrl({
-      version: "v4",
-      action: "write",
-      expires: Date.now() + 5 * 60 * 1000,
-      contentType,
-    });
-
+    if (!req.file) {
+      res.status(400).json({ message: "No se recibió imagen" });
+      return;
+    }
+    const webpBuffer = await sharp(req.file.buffer).webp({ quality: 82 }).toBuffer();
+    const objectName = `prizes/${Date.now()}-${crypto.randomUUID()}.webp`;
+    const gcsFile = bucketPublic.file(objectName);
+    await gcsFile.save(webpBuffer, { contentType: "image/webp", resumable: false });
     const publicUrl = `https://storage.googleapis.com/${bucketPublic.name}/${objectName}`;
-
-    res.json({ url, objectName, publicUrl });
+    res.json({ objectName, publicUrl });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Error generando signed upload URL" });
+    res.status(500).json({ message: "Error procesando imagen" });
   }
 };
 export const activityCloud = async (
@@ -45,26 +39,19 @@ export const activityCloud = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { filename, contentType } = req.body;
-
-    const ext = filename.split(".").pop()?.toLowerCase() || "bin";
-    const objectName = `activity/${Date.now()}-${crypto.randomUUID()}.${ext}`;
-
-    const file = bucketPublic.file(objectName);
-
-    const [url] = await file.getSignedUrl({
-      version: "v4",
-      action: "write",
-      expires: Date.now() + 5 * 60 * 1000,
-      contentType,
-    });
-
+    if (!req.file) {
+      res.status(400).json({ message: "No se recibió imagen" });
+      return;
+    }
+    const webpBuffer = await sharp(req.file.buffer).webp({ quality: 82 }).toBuffer();
+    const objectName = `activity/${Date.now()}-${crypto.randomUUID()}.webp`;
+    const gcsFile = bucketPublic.file(objectName);
+    await gcsFile.save(webpBuffer, { contentType: "image/webp", resumable: false });
     const publicUrl = `https://storage.googleapis.com/${bucketPublic.name}/${objectName}`;
-
-    res.json({ url, objectName, publicUrl });
+    res.json({ objectName, publicUrl });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Error generando signed upload URL" });
+    res.status(500).json({ message: "Error procesando imagen" });
   }
 };
 
@@ -95,33 +82,23 @@ export const redemptionsUpload = async (
 };
 
 export const agreementUpload = async (
-  req: AuthRequestFile,
+  req: Request,
   res: Response,
 ): Promise<void> => {
   try {
-    const { filename, contentType } = req.body;
-    if (!filename || !contentType) {
-      res.status(404).json({ message: "imagen no encontrada" });
+    if (!req.file) {
+      res.status(400).json({ message: "No se recibió imagen" });
       return;
     }
-    const ext = filename.split(".").pop()?.toLowerCase() || "bin";
-    const objectName = `agreements/${Date.now()}-${crypto.randomUUID()}.${ext}`;
-
-    const file = bucketPublic.file(objectName);
-
-    const [url] = await file.getSignedUrl({
-      version: "v4",
-      action: "write",
-      expires: Date.now() + 5 * 60 * 1000,
-      contentType,
-    });
-
+    const webpBuffer = await sharp(req.file.buffer).webp({ quality: 82 }).toBuffer();
+    const objectName = `agreements/${Date.now()}-${crypto.randomUUID()}.webp`;
+    const gcsFile = bucketPublic.file(objectName);
+    await gcsFile.save(webpBuffer, { contentType: "image/webp", resumable: false });
     const publicUrl = `https://storage.googleapis.com/${bucketPublic.name}/${objectName}`;
-
-    res.json({ url, objectName, publicUrl });
+    res.json({ objectName, publicUrl });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Error generando signed upload URL" });
+    res.status(500).json({ message: "Error procesando imagen" });
   }
 };
 

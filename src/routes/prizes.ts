@@ -8,7 +8,7 @@ import {
 } from "../controllers/prizeController";
 import { authenticate } from "../middlewares/authenticate";
 import { authorize } from "../middlewares/authorize";
-import { upload } from "../middlewares/upload";
+import { upload, uploadMemory } from "../middlewares/upload";
 import { prizeCloud } from "../controllers/googleCloudController";
 
 const router = Router();
@@ -54,6 +54,7 @@ router.post(
   "/file/prize-signed-upload",
   authenticate,
   authorize("admin"),
+  uploadMemory.single("image"),
   prizeCloud,
 );
 router.put(

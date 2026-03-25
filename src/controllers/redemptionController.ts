@@ -58,7 +58,7 @@ export const getWinners = async (
 ): Promise<void> => {
   try {
     const redemptions = await Redemption.findAll({
-      attributes: ["image", [Sequelize.col("user.name"), "winner"]],
+      attributes: ["image", "updated_at", [Sequelize.col("user.name"), "winner"]],
       where: {
         image: {
           [Op.ne]: null as unknown as string,
