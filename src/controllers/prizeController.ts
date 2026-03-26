@@ -6,7 +6,7 @@ export const getPrizes = async (req: Request, res: Response): Promise<void> => {
   try {
     const where: Record<string, unknown> = {};
     if (req.query.status) where.status = req.query.status;
-    const prizes = await Prize.findAll({ where });
+    const prizes = await Prize.findAll({ where, order: [["id", "DESC"]] });
 
     res.json(prizes);
   } catch (err) {

@@ -1,6 +1,13 @@
 import { Response } from "express";
 import { AuthRequest } from "../types";
-import { User, PointHistory, ActivityEntry, Redemption, Activity, Prize } from "../models";
+import {
+  User,
+  PointHistory,
+  ActivityEntry,
+  Redemption,
+  Activity,
+  Prize,
+} from "../models";
 import { createNotification } from "../services/notificationService";
 
 export const getUsers = async (
@@ -8,7 +15,10 @@ export const getUsers = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const users = await User.findAll({ attributes: { exclude: ["password"] } });
+    const users = await User.findAll({
+      attributes: { exclude: ["password"] },
+      order: [["id", "DESC"]],
+    });
     res.json(users);
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
@@ -144,14 +154,24 @@ export const getUserFullHistory = async (
         where: { user_id: userId },
         order: [["created_at", "DESC"]],
         include: [
-          { model: Activity, as: "activity", attributes: ["id", "name", "points_reward"] },
+          {
+            model: Activity,
+            as: "activity",
+            attributes: ["id", "name", "points_reward"],
+          },
           { model: User, as: "reviewer", attributes: ["id", "name"] },
         ],
       }),
       Redemption.findAll({
         where: { user_id: userId },
         order: [["created_at", "DESC"]],
-        include: [{ model: Prize, as: "prize", attributes: ["id", "name", "points_required"] }],
+        include: [
+          {
+            model: Prize,
+            as: "prize",
+            attributes: ["id", "name", "points_required"],
+          },
+        ],
       }),
     ]);
 

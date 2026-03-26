@@ -7,7 +7,9 @@ import { Storage } from "@google-cloud/storage";
 const storage = new Storage({
   credentials: JSON.parse(process.env.GCP_KEY as string),
 });
-const bucketPublic = storage.bucket(process.env.GCS_BUCKET_NAME_PUBLIC as string);
+const bucketPublic = storage.bucket(
+  process.env.GCS_BUCKET_NAME_PUBLIC as string,
+);
 
 async function deleteObjectFromGCS(objectName: string) {
   if (!objectName) return;
@@ -24,7 +26,14 @@ export const getAgreement = async (
 ): Promise<void> => {
   try {
     const agreements = await Agreement.findAll({
-      include: [{ model: AgreementImage, as: "images", order: [["position", "ASC"]] }],
+      include: [
+        {
+          model: AgreementImage,
+          as: "images",
+          order: [["position", "ASC"]],
+        },
+      ],
+      order: [["id", "DESC"]],
     });
     res.status(200).json(agreements);
   } catch (err) {
@@ -38,7 +47,9 @@ export const getAgreementByID = async (
 ): Promise<void> => {
   try {
     const agreement = await Agreement.findByPk(String(req.params.id), {
-      include: [{ model: AgreementImage, as: "images", order: [["position", "ASC"]] }],
+      include: [
+        { model: AgreementImage, as: "images", order: [["position", "ASC"]] },
+      ],
     });
     res.status(200).json(agreement);
   } catch (err) {
@@ -104,7 +115,12 @@ export const createAgreement = async (req: AuthRequest, res: Response) => {
   try {
     const { name, description, page, maps_url, logo, gallery } = req.body;
 
-    const agreement = await Agreement.create({ name, description, page, maps_url });
+    const agreement = await Agreement.create({
+      name,
+      description,
+      page,
+      maps_url,
+    });
 
     const imagesToCreate: any[] = [];
 
@@ -155,7 +171,9 @@ export const deleteAgreement = async (req: AuthRequest, res: Response) => {
     }
 
     const images = (agreement as any).images as AgreementImage[];
-    await Promise.all(images.map((img) => deleteObjectFromGCS(img.object_name)));
+    await Promise.all(
+      images.map((img) => deleteObjectFromGCS(img.object_name)),
+    );
     await AgreementImage.destroy({ where: { agreement_id: agreement.id } });
     await agreement.destroy();
 
@@ -166,7 +184,10 @@ export const deleteAgreement = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const deleteAgreementImageById = async (req: AuthRequest, res: Response) => {
+export const deleteAgreementImageById = async (
+  req: AuthRequest,
+  res: Response,
+) => {
   try {
     const { imageId } = req.params;
     const image = await AgreementImage.findByPk(String(imageId));
