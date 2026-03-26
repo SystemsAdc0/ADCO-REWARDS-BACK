@@ -8,7 +8,7 @@ import {
   Redemption,
 } from "../models";
 import { createNotification } from "../services/notificationService";
-import { Sequelize } from "sequelize";
+import { Sequelize, Op } from "sequelize";
 import SocialMedia from "../models/SocialMedia";
 import { deleteActivityEntryFile } from "./googleCloudController";
 
@@ -22,6 +22,17 @@ export const getActivities = async (
       res.status(403).json("usuario no identificado");
       return;
     }
+
+    // Auto-desactivar actividades cuya fecha de fin ya pasó
+    await Activity.update(
+      { status: "inactive" },
+      {
+        where: {
+          status: "active",
+          end_date: { [Op.lt]: new Date() },
+        },
+      },
+    );
 
     const activities = await Activity.findAll({
       attributes: {

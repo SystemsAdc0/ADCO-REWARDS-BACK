@@ -19,3 +19,4 @@ router.delete("/:id/images/:imageId", authenticate, authorize("admin"), deleteAg
 router.delete("/:id", authenticate, authorize("admin"), deleteAgreement);
 
 export default router;
+ 
