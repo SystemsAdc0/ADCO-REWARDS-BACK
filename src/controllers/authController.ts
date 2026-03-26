@@ -12,7 +12,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       res.status(400).json({ message: "El email ya esta registrado" });
       return;
     }
-
+  
     const hashed = await bcrypt.hash(password, 10);
     const user = await User.create({
       name,
