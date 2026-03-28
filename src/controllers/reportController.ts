@@ -84,8 +84,42 @@ export const getPendingCounts = async (
   }
 };
 
+export const getTopParticipants = async (
+  _req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const results = await sequelize.query<{
+      user_id: number;
+      name: string;
+      email: string;
+      avatar: string;
+      total_participations: number;
+      approved: number;
+      points_earned: number;
+    }>(
+      `SELECT
+        u.id as user_id, u.name, u.email, u.avatar,
+        COUNT(ae.id) as total_participations,
+        SUM(CASE WHEN ae.status = 'approved' THEN 1 ELSE 0 END) as approved,
+        SUM(CASE WHEN ae.status = 'approved' THEN a.points_reward ELSE 0 END) as points_earned
+       FROM activity_entries ae
+       JOIN users u ON ae.user_id = u.id
+       JOIN activities a ON ae.activity_id = a.id
+       WHERE u.role IN ('user', 'moderator')
+       GROUP BY u.id, u.name, u.email, u.avatar
+       ORDER BY approved DESC, total_participations DESC
+       LIMIT 20`,
+      { type: QueryTypes.SELECT },
+    );
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
 export const getTopPrizes = async (
-  req: AuthRequest,
+  _req: AuthRequest,
   res: Response,
 ): Promise<void> => {
   try {

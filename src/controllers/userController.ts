@@ -9,6 +9,7 @@ import {
   Prize,
 } from "../models";
 import { createNotification } from "../services/notificationService";
+import bcrypt from "bcryptjs";
 
 export const getUsers = async (
   _req: AuthRequest,
@@ -65,6 +66,27 @@ export const updateUser = async (
         status: user.status,
       },
     });
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const resetUserPassword = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      res.status(400).json({ message: "La contraseña debe tener al menos 6 caracteres" });
+      return;
+    }
+    const user = await User.findByPk(String(id));
+    if (!user) { res.status(404).json({ message: "Usuario no encontrado" }); return; }
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await user.update({ password: hashed });
+    res.json({ message: "Contraseña restablecida correctamente" });
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
   }

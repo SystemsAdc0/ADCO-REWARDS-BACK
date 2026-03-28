@@ -9,6 +9,7 @@ import {
   togglePointRequestPermission,
   getUserFullHistory,
   getUserDirectory,
+  resetUserPassword,
 } from "../controllers/userController";
 import { authenticate } from "../middlewares/authenticate";
 import { authorize } from "../middlewares/authorize";
@@ -97,5 +98,6 @@ router.put("/:id", authenticate, authorize("admin"), updateUser);
 router.post("/:id/add-points", authenticate, authorize("admin"), addPoints);
 router.patch("/:id/toggle-point-request", authenticate, authorize("admin"), togglePointRequestPermission);
 router.get("/:id/full-history", authenticate, authorize("admin"), getUserFullHistory);
+router.patch("/:id/reset-password", authenticate, authorize("admin"), resetUserPassword);
 router.delete("/:id", authenticate, authorize("admin"), deleteUser);
 export default router;
