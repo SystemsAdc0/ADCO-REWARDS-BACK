@@ -8,7 +8,7 @@ import {
   Redemption,
 } from "../models";
 import { createNotification } from "../services/notificationService";
-import { Sequelize, Op } from "sequelize";
+import { Sequelize, Op, where } from "sequelize";
 import SocialMedia from "../models/SocialMedia";
 import { deleteActivityEntryFile } from "./googleCloudController";
 
@@ -169,6 +169,33 @@ export const joinActivity = async (
   try {
     const userId = req.user!.id;
     const activityId = parseInt(String(req.params.id));
+    const activityExist = await ActivityEntry.findOne({
+      where: {
+        user_id: userId,
+        activity_id: activityId,
+      },
+    });
+
+    if (activityExist?.dataValues) {
+      await ActivityEntry.update(
+        {
+          status: "pending",
+          file: req.body.file,
+        },
+        {
+          where: {
+            activity_id: activityId,
+            user_id: userId,
+            status: "rejected",
+          },
+        },
+      );
+      res.status(201).json({
+        message: "Participacion registrada, pendiente de revision",
+        activityExist,
+      });
+      return;
+    }
     const entry = await ActivityEntry.create({
       user_id: userId,
       activity_id: activityId,
@@ -180,7 +207,6 @@ export const joinActivity = async (
     });
   } catch (err) {
     console.log(err);
-
     res.status(500).json({ message: "Error", error: err });
   }
 };

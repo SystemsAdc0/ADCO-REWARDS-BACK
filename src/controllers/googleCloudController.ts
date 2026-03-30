@@ -23,10 +23,15 @@ export const prizeCloud = async (
       res.status(400).json({ message: "No se recibió imagen" });
       return;
     }
-    const webpBuffer = await sharp(req.file.buffer).webp({ quality: 82 }).toBuffer();
+    const webpBuffer = await sharp(req.file.buffer)
+      .webp({ quality: 82 })
+      .toBuffer();
     const objectName = `prizes/${Date.now()}-${crypto.randomUUID()}.webp`;
     const gcsFile = bucketPublic.file(objectName);
-    await gcsFile.save(webpBuffer, { contentType: "image/webp", resumable: false });
+    await gcsFile.save(webpBuffer, {
+      contentType: "image/webp",
+      resumable: false,
+    });
     const publicUrl = `https://storage.googleapis.com/${bucketPublic.name}/${objectName}`;
     res.json({ objectName, publicUrl });
   } catch (err) {
@@ -43,10 +48,15 @@ export const activityCloud = async (
       res.status(400).json({ message: "No se recibió imagen" });
       return;
     }
-    const webpBuffer = await sharp(req.file.buffer).webp({ quality: 82 }).toBuffer();
+    const webpBuffer = await sharp(req.file.buffer)
+      .webp({ quality: 82 })
+      .toBuffer();
     const objectName = `activity/${Date.now()}-${crypto.randomUUID()}.webp`;
     const gcsFile = bucketPublic.file(objectName);
-    await gcsFile.save(webpBuffer, { contentType: "image/webp", resumable: false });
+    await gcsFile.save(webpBuffer, {
+      contentType: "image/webp",
+      resumable: false,
+    });
     const publicUrl = `https://storage.googleapis.com/${bucketPublic.name}/${objectName}`;
     res.json({ objectName, publicUrl });
   } catch (err) {
@@ -90,10 +100,15 @@ export const agreementUpload = async (
       res.status(400).json({ message: "No se recibió imagen" });
       return;
     }
-    const webpBuffer = await sharp(req.file.buffer).webp({ quality: 82 }).toBuffer();
+    const webpBuffer = await sharp(req.file.buffer)
+      .webp({ quality: 82 })
+      .toBuffer();
     const objectName = `agreements/${Date.now()}-${crypto.randomUUID()}.webp`;
     const gcsFile = bucketPublic.file(objectName);
-    await gcsFile.save(webpBuffer, { contentType: "image/webp", resumable: false });
+    await gcsFile.save(webpBuffer, {
+      contentType: "image/webp",
+      resumable: false,
+    });
     const publicUrl = `https://storage.googleapis.com/${bucketPublic.name}/${objectName}`;
     res.json({ objectName, publicUrl });
   } catch (err) {
@@ -142,7 +157,9 @@ export const getActivityFile = async (req: AuthRequest, res: Response) => {
  * Elimina un archivo de activity_entries del bucket privado.
  * Se usa al rechazar una participación para liberar espacio y permitir re-envío.
  */
-export const deleteActivityEntryFile = async (objectName: string): Promise<void> => {
+export const deleteActivityEntryFile = async (
+  objectName: string,
+): Promise<void> => {
   if (!objectName) return;
   try {
     await bucket.file(objectName).delete();
@@ -153,4 +170,3 @@ export const deleteActivityEntryFile = async (objectName: string): Promise<void>
     }
   }
 };
-

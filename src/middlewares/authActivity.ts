@@ -9,7 +9,6 @@ export const authActivity = async (
 ) => {
   try {
     const userId = req.user!.id;
-
     const activityId = parseInt(String(req.params.id));
     const activity = await Activity.findByPk(activityId);
 
@@ -22,6 +21,10 @@ export const authActivity = async (
       where: { user_id: userId, activity_id: activityId },
     });
 
+    if (existing?.status === "rejected") {
+      next();
+      return;
+    }
     if (existing) {
       res.status(400).json({ message: "Ya participas en esta actividad" });
       return;
@@ -33,8 +36,10 @@ export const authActivity = async (
         .json({ message: "Archivo de participacion no encontrado" });
       return;
     }
+
     next();
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Error", error: err });
   }
 };
