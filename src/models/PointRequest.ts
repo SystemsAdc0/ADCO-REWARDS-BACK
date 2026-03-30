@@ -11,7 +11,7 @@ interface PointRequestAttributes {
   created_at?: Date;
   updated_at?: Date;
 }
-
+ 
 interface PointRequestCreationAttributes
   extends Optional<PointRequestAttributes, "id" | "message" | "status"> {}
 

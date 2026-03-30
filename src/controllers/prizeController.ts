@@ -57,25 +57,13 @@ export const updatePrize = async (
       res.status(404).json({ message: "Premio no encontrado" });
       return;
     }
-
-    const { name, description, points_required, stock, status } = req.body;
-    console.log({
-      name,
-      description,
-      points_required,
-      stock,
-      status,
-    });
+    if (!req.body) {
+      res.status(404).json({ message: "datos no encontrados" });
+      return;
+    }
     const image =
       (req.file as Express.Multer.File | undefined)?.filename || prize.image;
-    await prize.update({
-      name,
-      description,
-      points_required,
-      stock,
-      status,
-      image,
-    });
+    await prize.update({ ...req.body, image: image });
     res.json(prize);
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
