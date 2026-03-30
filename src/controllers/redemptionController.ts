@@ -13,39 +13,65 @@ export const createRedemption = async (
     const { prize_id } = req.body;
 
     const prize = await Prize.findByPk(prize_id);
+
     if (!prize || prize.status !== "active") {
       res.status(404).json({ message: "Premio no disponible" });
       return;
     }
+
     if (prize.stock <= 0) {
       res.status(400).json({ message: "Sin stock disponible" });
       return;
     }
 
     const user = await User.findByPk(userId);
+
     if (!user || user.points < prize.points_required) {
       res.status(400).json({ message: "Puntos insuficientes" });
       return;
     }
 
-    await user.update({ points: user.points - prize.points_required });
-    await prize.update({ stock: prize.stock - 1 });
+    const redemptionExist = await Redemption.findOne({
+      where: {
+        user_id: userId,
+        prize_id,
+      },
+    });
+
+    if (redemptionExist && !prize.allow_multiple_redemptions) {
+      res.status(400).json({
+        message: "Este premio solo se puede canjear una vez por persona",
+      });
+      return;
+    }
+
+    await user.update({
+      points: user.points - prize.points_required,
+    });
+
+    await prize.update({
+      stock: prize.stock - 1,
+    });
+
     const redemption = await Redemption.create({
       user_id: userId,
       prize_id,
       points_spent: prize.points_required,
     });
+
     await PointHistory.create({
       user_id: userId,
       points: -prize.points_required,
       action: "spent",
       description: `Canje: ${prize.name}`,
     });
+
     await createNotification(
       userId,
       `Canjeaste "${prize.name}" por ${prize.points_required} puntos. En proceso de entrega.`,
       "success",
     );
+
     res.status(201).json(redemption);
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });

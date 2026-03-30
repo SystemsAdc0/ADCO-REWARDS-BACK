@@ -2,6 +2,7 @@ import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/database";
 import { RedemptionStatus } from "../types";
 import User from "./User";
+import Prize from "./Prize";
 
 interface RedemptionAttributes {
   id: number;
@@ -35,7 +36,10 @@ class Redemption
   public image?: string;
   public delivered_by?: number;
   public redeemed_at?: Date;
+
   public user?: User;
+  public prize?: Prize;
+
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
