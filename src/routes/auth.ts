@@ -16,13 +16,13 @@ const router = Router();
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         application/json: 
  *           schema:
- *             type: object
+ *             type: object 
  *             required: [name, email, password]
  *             properties:
  *               name: { type: string }
- *               email: { type: string, format: email }
+ *               email: { type: string, format: email } 
  *               password: { type: string, minLength: 6 }
  *     responses:
  *       201: { description: Usuario registrado }
