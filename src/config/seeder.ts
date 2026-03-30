@@ -176,7 +176,7 @@ async function seed() {
         stock: 50,
         allow_multiple_redemptions: true,
       },
-    ]);
+    ]); 
     console.log("Premios creados.");
 
     // Obtener IDs de usuarios creados
