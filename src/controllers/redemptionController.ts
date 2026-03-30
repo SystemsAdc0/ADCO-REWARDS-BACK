@@ -3,7 +3,6 @@ import { AuthRequest, AuthRequestFile, RedemptionStatus } from "../types";
 import { Redemption, Prize, User, PointHistory } from "../models";
 import { createNotification } from "../services/notificationService";
 import { Op, Sequelize } from "sequelize";
-import { log } from "node:console";
 
 export const createRedemption = async (
   req: AuthRequest,
