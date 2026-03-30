@@ -58,7 +58,11 @@ export const getWinners = async (
 ): Promise<void> => {
   try {
     const redemptions = await Redemption.findAll({
-      attributes: ["image", "updated_at", [Sequelize.col("user.name"), "winner"]],
+      attributes: [
+        "image",
+        "updated_at",
+        [Sequelize.col("user.name"), "winner"],
+      ],
       where: {
         image: {
           [Op.ne]: null as unknown as string,
@@ -134,6 +138,12 @@ export const updateRedemptionStatus = async (
       return;
     }
     const image = req.uploadedFile?.publicUrl ?? null;
+    const statusSpanish: Record<RedemptionStatus, string> = {
+      pending: "Pendiente",
+      approved: "Aprobado",
+      delivered: "Entregado",
+      rejected: "Rechazado",
+    };
     const status = req.body.status as RedemptionStatus;
     const updates: Partial<{
       status: RedemptionStatus;
@@ -173,7 +183,7 @@ export const updateRedemptionStatus = async (
     const msg =
       status === "rejected"
         ? `Tu canje del ${prize?.name} fue cancelado , se te devolvieron ${redemption.points_spent} pst`
-        : `Tu canje de "${prize?.name}" fue actualizado a: ${status}`;
+        : `Tu canje de "${prize?.name}" fue actualizado a: ${statusSpanish[status]}`;
     await createNotification(redemption.user_id, msg, "info");
     res.json({
       message: "Estado actualizado",
