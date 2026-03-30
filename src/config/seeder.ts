@@ -138,6 +138,7 @@ async function seed() {
         image:
           "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         stock: 10,
+        allow_multiple_redemptions: true,
       },
       {
         name: "Tarjeta de regalo $50",
@@ -146,6 +147,7 @@ async function seed() {
         image:
           "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         stock: 20,
+        allow_multiple_redemptions: true,
       },
       {
         name: "Mochila Ejecutiva",
@@ -154,6 +156,7 @@ async function seed() {
           "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         points_required: 500,
         stock: 5,
+        allow_multiple_redemptions: true,
       },
       {
         name: "Termo Stanley 1L",
@@ -162,6 +165,7 @@ async function seed() {
           "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         points_required: 150,
         stock: 15,
+        allow_multiple_redemptions: true,
       },
       {
         name: "Curso Online Premium",
@@ -170,6 +174,7 @@ async function seed() {
           "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         points_required: 400,
         stock: 50,
+        allow_multiple_redemptions: true,
       },
     ]);
     console.log("Premios creados.");
