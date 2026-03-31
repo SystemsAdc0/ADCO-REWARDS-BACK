@@ -10,6 +10,7 @@ import {
   getUserFullHistory,
   getUserDirectory,
   resetUserPassword,
+  getBirthdaysThisMonth,
 } from "../controllers/userController";
 import { authenticate } from "../middlewares/authenticate";
 import { authorize } from "../middlewares/authorize";
@@ -45,6 +46,7 @@ router.get("/", authenticate, authorize("admin"), getUsers);
  *       200: { description: Datos del usuario }
  */
 router.get("/directory", authenticate, getUserDirectory);
+router.get("/birthdays/month", authenticate, getBirthdaysThisMonth);
 router.get("/:id", authenticate, authorize("admin"), getUserById);
 
 /**

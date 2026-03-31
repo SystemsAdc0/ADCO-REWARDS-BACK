@@ -10,6 +10,7 @@ import {
 } from "../models";
 import { createNotification } from "../services/notificationService";
 import bcrypt from "bcryptjs";
+import { Op, fn, col, literal } from "sequelize";
 
 export const getUsers = async (
   _req: AuthRequest,
@@ -66,6 +67,29 @@ export const updateUser = async (
         status: user.status,
       },
     });
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const getBirthdaysThisMonth = async (
+  _req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const currentMonth = new Date().getMonth() + 1;
+    const users = await User.findAll({
+      attributes: ["id", "name", "avatar", "birth_date", "company"],
+      where: {
+        [Op.and]: [
+          { birth_date: { [Op.not]: null } },
+          { status: "active" },
+          literal(`MONTH(birth_date) = ${currentMonth}`),
+        ],
+      } as any,
+      order: [[fn("DAY", col("birth_date")), "ASC"]],
+    });
+    res.json(users);
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
   }
