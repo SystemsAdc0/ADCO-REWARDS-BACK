@@ -12,13 +12,14 @@ interface ActivityAttributes {
   status: ActivityStatus;
   category: string;
   image: string;
+  counts_for_travel: boolean;
   created_at?: Date;
   updated_at?: Date;
 }
 
 interface ActivityCreationAttributes extends Optional<
   ActivityAttributes,
-  "id" | "status"
+  "id" | "status" | "counts_for_travel"
 > {}
 
 class Activity
@@ -34,6 +35,7 @@ class Activity
   public image!: string;
   public end_date!: Date;
   public status!: ActivityStatus;
+  public counts_for_travel!: boolean;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -57,6 +59,7 @@ Activity.init(
       type: DataTypes.ENUM("active", "inactive", "finished"),
       defaultValue: "active",
     },
+    counts_for_travel: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
   },
   {
     sequelize,

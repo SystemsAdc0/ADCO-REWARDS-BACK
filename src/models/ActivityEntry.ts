@@ -45,7 +45,7 @@ ActivityEntry.init(
     activity_id: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
     status: {
       type: DataTypes.ENUM("pending", "approved", "rejected"),
-      defaultValue: "pending",
+      defaultValue: "pending", 
     },
     file: { type: DataTypes.TEXT, allowNull: false },
     reviewed_by: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },

@@ -6,14 +6,14 @@ import Prize from "./Prize";
 
 interface RedemptionAttributes {
   id: number;
-  user_id: number;
-  prize_id: number;
+  user_id: number; 
+  prize_id: number; 
   status: RedemptionStatus;
   points_spent: number;
   notes?: string;
   image?: string;
   delivered_by?: number;
-  redeemed_at?: Date;
+  redeemed_at?: Date; 
   created_at?: Date;
   updated_at?: Date;
 }

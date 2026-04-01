@@ -114,7 +114,7 @@ async function start() {
       console.log(`Swagger docs: http://localhost:${PORT}/api-docs`);
     });
     server.on("error", (err: NodeJS.ErrnoException) => {
-      if (err.code === "EADDRINUSE") {
+      if (err.code === "EADDRINUSE") { 
         console.error(
           `Puerto ${PORT} ya está en uso. Mata el proceso anterior.`,
         );

@@ -1,6 +1,12 @@
 import { Response } from "express";
 import { AuthRequest } from "../types";
-import { User, Prize, Redemption, ActivityEntry, PointRequest } from "../models";
+import {
+  User,
+  Prize,
+  Redemption,
+  ActivityEntry,
+  PointRequest,
+} from "../models";
 import sequelize from "../config/database";
 import { Op, QueryTypes } from "sequelize";
 
@@ -34,8 +40,8 @@ export const getSummary = async (
       totalPointsInCirculation,
     });
   } catch (err) {
-    res.status(500).json({ message: 'Error', error: err });
-  } 
+    res.status(500).json({ message: "Error", error: err });
+  }
 };
 
 export const getTopUsers = async (
@@ -68,8 +74,12 @@ export const getPendingCounts = async (
     let pendingPointRequests = 0;
 
     if (role === "admin" || role === "moderator") {
-      pendingEntries = await ActivityEntry.count({ where: { status: "pending" } });
-      pendingRedemptions = await Redemption.count({ where: { status: "pending" } });
+      pendingEntries = await ActivityEntry.count({
+        where: { status: "pending" },
+      });
+      pendingRedemptions = await Redemption.count({
+        where: { status: "pending" },
+      });
     }
 
     if (userId) {
@@ -106,7 +116,7 @@ export const getTopParticipants = async (
        FROM activity_entries ae
        JOIN users u ON ae.user_id = u.id
        JOIN activities a ON ae.activity_id = a.id
-       WHERE u.role IN ('user', 'moderator')
+       WHERE u.role IN ('user', 'moderator') AND a.counts_for_travel = 1
        GROUP BY u.id, u.name, u.email, u.avatar
        ORDER BY approved DESC, total_participations DESC
        LIMIT 20`,
@@ -114,6 +124,70 @@ export const getTopParticipants = async (
     );
     res.json(results);
   } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const getParticipationsRanking = async (
+  _req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const [totalActivities, ranking] = await Promise.all([
+      sequelize.query<{ total: number }>(
+        `SELECT COUNT(*) as total FROM activities WHERE counts_for_travel = 1`,
+        { type: QueryTypes.SELECT },
+      ),
+      sequelize.query<{
+        user_id: number;
+        name: string;
+        avatar: string;
+        participations: number;
+        approved: number;
+      }>(
+        `SELECT
+          u.id as user_id, u.name, u.avatar,
+          COUNT(ae.id) as participations,
+          SUM(CASE WHEN ae.status = 'approved' THEN 1 ELSE 0 END) as approved
+         FROM activity_entries ae
+         JOIN users u ON ae.user_id = u.id
+         JOIN activities a ON ae.activity_id = a.id
+         WHERE u.role IN ('user', 'moderator') AND a.counts_for_travel = 1
+         GROUP BY u.id, u.name, u.avatar
+         ORDER BY participations DESC
+         LIMIT 10`,
+        { type: QueryTypes.SELECT },
+      ),
+    ]);
+    res.json({ total_activities: totalActivities[0]?.total ?? 0, ranking });
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const getUserMissingActivities = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = parseInt(String(req.params.userId), 10);
+    if (isNaN(userId)) {
+      res.status(400).json({ message: "Invalid user id" });
+      return;
+    }
+    const missing = await sequelize.query<{ id: number; title: string }>(
+      `SELECT a.id, a.name
+       FROM activities a
+       LEFT JOIN activity_entries ae
+         ON ae.activity_id = a.id AND ae.user_id = ? AND ae.status = 'approved'
+       WHERE a.counts_for_travel = 1 AND ae.id IS NULL
+       ORDER BY a.name ASC`,
+      { type: QueryTypes.SELECT, replacements: [userId] },
+    );
+    res.json(missing);
+  } catch (err) {
+    console.log(err);
+
     res.status(500).json({ message: "Error", error: err });
   }
 };

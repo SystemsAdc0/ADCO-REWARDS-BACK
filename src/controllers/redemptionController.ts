@@ -88,6 +88,7 @@ export const getWinners = async (
         "image",
         "updated_at",
         [Sequelize.col("user.name"), "winner"],
+        [Sequelize.col("user.company"), "company"],
       ],
       where: {
         image: {
