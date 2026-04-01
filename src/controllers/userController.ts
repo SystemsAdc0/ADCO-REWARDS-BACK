@@ -11,7 +11,7 @@ import {
 import { createNotification } from "../services/notificationService";
 import bcrypt from "bcryptjs";
 import sequelize from "../config/database";
-import { Op, QueryTypes } from "sequelize";
+import { QueryTypes } from "sequelize";
 
 export const getUsers = async (
   _req: AuthRequest,
