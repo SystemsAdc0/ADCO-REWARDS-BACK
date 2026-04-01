@@ -7,6 +7,7 @@ import {
   getTopParticipants,
   getParticipationsRanking,
   getUserMissingActivities,
+  isTopParticipant,
 } from "../controllers/reportController";
 import { authenticate } from "../middlewares/authenticate";
 import { authorize } from "../middlewares/authorize";
@@ -34,6 +35,12 @@ router.get(
   authenticate,
   authorize("admin"),
   getUserMissingActivities,
+);
+router.get(
+  "/is-top-participant",
+  authenticate,
+  authorize("moderator", "user"),
+  isTopParticipant,
 );
 
 export default router;

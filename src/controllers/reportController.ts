@@ -165,6 +165,39 @@ export const getParticipationsRanking = async (
   }
 };
 
+export const isTopParticipant = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+
+    const [totalRow, userRow] = await Promise.all([
+      sequelize.query<{ total: number }>(
+        `SELECT COUNT(*) as total FROM activities WHERE counts_for_travel = 1`,
+        { type: QueryTypes.SELECT },
+      ),
+      sequelize.query<{ approved: number }>(
+        `SELECT COUNT(*) as approved
+         FROM activity_entries ae
+         JOIN activities a ON ae.activity_id = a.id
+         WHERE ae.user_id = :userId
+           AND a.counts_for_travel = 1
+           AND ae.status = 'approved'`,
+        { type: QueryTypes.SELECT, replacements: { userId } },
+      ),
+    ]);
+
+    const total = Number(totalRow[0]?.total ?? 0);
+    const approved = Number(userRow[0]?.approved ?? 0);
+    const isTop = total > 0 && approved / total >= 0.9;
+
+    res.json({ isTop });
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
 export const getUserMissingActivities = async (
   req: AuthRequest,
   res: Response,
