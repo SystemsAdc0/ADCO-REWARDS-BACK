@@ -57,7 +57,7 @@ export const getActivities = async (
         attributes: ["name"],
       },
       where: user.role == "admin" ? {} : { status: "active" },
-      order: user.role == "admin" ? [["id", "DESC"]] : [["start_date", "ASC"]],
+      order: [["id", "DESC"]],
     });
 
     res.json(activities);
