@@ -50,7 +50,11 @@ export const getTopUsers = async (
 ): Promise<void> => {
   try {
     const users = await User.findAll({
-      where: { role: { [Op.in]: ["user", "moderator"] }, status: "active" },
+      where: {
+        role: { [Op.in]: ["user", "moderator"] },
+        status: "active",
+        id: { [Op.notIn]: [20, 43] }, // 👈 excluir estos IDs (20: adan escamilla, 43: jorge alberto)
+      },
       attributes: { exclude: ["password"] },
       order: [["points", "DESC"]],
       limit: 10,
