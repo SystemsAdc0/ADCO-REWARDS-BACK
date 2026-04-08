@@ -22,6 +22,7 @@ import reportRoutes from "./routes/reports";
 import googleFiles from "./routes/googleCloud";
 import agreements from "./routes/agreements";
 import pointRequests from "./routes/pointRequests";
+import childrenDay from "./routes/childrenDay";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -96,6 +97,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/agreements", agreements);
 app.use("/api/point-requests", pointRequests);
+app.use("/api/children-day", childrenDay);
 // Health check
 app.get("/health", (_req, res) =>
   res.json({ status: "ok", timestamp: new Date() }),
@@ -114,7 +116,7 @@ async function start() {
       console.log(`Swagger docs: http://localhost:${PORT}/api-docs`);
     });
     server.on("error", (err: NodeJS.ErrnoException) => {
-      if (err.code === "EADDRINUSE") { 
+      if (err.code === "EADDRINUSE") {
         console.error(
           `Puerto ${PORT} ya está en uso. Mata el proceso anterior.`,
         );

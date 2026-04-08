@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { NextFunction, Request, Response } from "express";
 import { Storage } from "@google-cloud/storage";
 import { AuthRequest, AuthRequestFile } from "../types";
-import { Agreement } from "../models";
+import { Agreement, ChildrenDay } from "../models";
 import sharp from "sharp";
 
 const storage = new Storage({
@@ -170,4 +170,46 @@ export const deleteActivityEntryFile = async (
     }
   }
 };
- 
+
+//children day subida de la imagen de participacion
+export const childrenDayUpload = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    if (!req.file) {
+      console.log("1");
+
+      res.status(400).json({ message: "No se recibió imagen" });
+      return;
+    }
+    const exist = await ChildrenDay.findOne({
+      where: { user_id: req.user!.id },
+    });
+
+    if (exist) {
+      console.log("2");
+
+      res.status(400).json({ message: "Ya estas participando " });
+      return;
+    }
+
+    const webpBuffer = await sharp(req.file.buffer)
+      .webp({ quality: 82 })
+      .toBuffer();
+    const objectName = `children_day/${Date.now()}-${crypto.randomUUID()}.webp`;
+    const gcsFile = bucketPublic.file(objectName);
+    await gcsFile.save(webpBuffer, {
+      contentType: "image/webp",
+      resumable: false,
+    });
+    const publicUrl = `https://storage.googleapis.com/${bucketPublic.name}/${objectName}`;
+
+    await ChildrenDay.create({ image: publicUrl, user_id: req.user!.id });
+
+    res.json("Participacion subida!");
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error procesando imagen" });
+  }
+};

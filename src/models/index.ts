@@ -9,6 +9,7 @@ import SocialMedia from "./SocialMedia";
 import Agreement from "./Agreement";
 import AgreementImage from "./AgreementImage";
 import PointRequest from "./PointRequest";
+import ChildrenDay from "./ChildrenDay";
 // User associations
 User.hasMany(Redemption, { foreignKey: "user_id", as: "redemptions" });
 User.hasMany(PointHistory, { foreignKey: "user_id", as: "pointHistory" });
@@ -58,8 +59,20 @@ SocialMedia.belongsTo(Activity, {
 });
 
 // AgreementImage associations
-Agreement.hasMany(AgreementImage, { foreignKey: "agreement_id", as: "images", onDelete: "CASCADE" });
-AgreementImage.belongsTo(Agreement, { foreignKey: "agreement_id", as: "agreement" });
+Agreement.hasMany(AgreementImage, {
+  foreignKey: "agreement_id",
+  as: "images",
+  onDelete: "CASCADE",
+});
+AgreementImage.belongsTo(Agreement, {
+  foreignKey: "agreement_id",
+  as: "agreement",
+});
+//chidren day
+ChildrenDay.belongsTo(User, {
+  foreignKey: "user_id",
+  as: "user",
+});
 
 export {
   User,
@@ -72,4 +85,5 @@ export {
   Agreement,
   AgreementImage,
   PointRequest,
+  ChildrenDay,
 };
