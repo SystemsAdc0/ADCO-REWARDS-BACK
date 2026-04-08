@@ -56,8 +56,8 @@ export const getActivities = async (
         as: "social_medias",
         attributes: ["name"],
       },
-      where: user.role == "admin" ? {} : { status: "active" },
-      order: user.role == "admin" ? [["id", "DESC"]] : [["start_date", "ASC"]],
+      // where: user.role == "admin" ? {} : { status: "active" },
+      order: [["id", "DESC"]],
     });
 
     res.json(activities);

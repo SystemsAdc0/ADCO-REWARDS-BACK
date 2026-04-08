@@ -36,13 +36,17 @@ export const createPrize = async (
   req: AuthRequest,
   res: Response,
 ): Promise<void> => {
-  console.log(req.body);
   try {
-    const prize = await Prize.create(req.body);
+    const { name, description, ...rest } = req.body;
+
+    const formattedData = {
+      ...rest,
+      name: name?.trim().toLowerCase(),
+      description: description?.trim(),
+    };
+    const prize = await Prize.create(formattedData);
     res.status(201).json(prize);
   } catch (err) {
-    console.log(err);
-
     res.status(500).json({ message: "Error", error: err });
   }
 };
