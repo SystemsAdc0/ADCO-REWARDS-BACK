@@ -10,6 +10,7 @@ import Agreement from "./Agreement";
 import AgreementImage from "./AgreementImage";
 import PointRequest from "./PointRequest";
 import ChildrenDay from "./ChildrenDay";
+import ChildrenDayVotes from "./ChildrenDayVote";
 // User associations
 User.hasMany(Redemption, { foreignKey: "user_id", as: "redemptions" });
 User.hasMany(PointHistory, { foreignKey: "user_id", as: "pointHistory" });
@@ -73,7 +74,15 @@ ChildrenDay.belongsTo(User, {
   foreignKey: "user_id",
   as: "user",
 });
-
+ChildrenDay.hasMany(ChildrenDayVotes, {
+  foreignKey: "children_day_id",
+  as: "votes",
+});
+//children day votes
+ChildrenDayVotes.belongsTo(ChildrenDay, {
+  foreignKey: "children_day_id",
+  as: "children_day",
+});
 export {
   User,
   Prize,
@@ -86,4 +95,5 @@ export {
   AgreementImage,
   PointRequest,
   ChildrenDay,
+  ChildrenDayVotes,
 };

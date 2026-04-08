@@ -1,45 +1,47 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/database";
-interface ChildrenDayEntryAttributes {
+interface ChildrenDayVoteEntryAttributes {
   id: number;
+  children_day_id: number;
   user_id: number;
-  image: string;
   created_at?: Date;
   updated_at?: Date;
 }
-interface ChildrenDayEntryCreationAttributes extends Optional<
-  ChildrenDayEntryAttributes,
+interface ChildrenDayVotesCreationAttributes extends Optional<
+  ChildrenDayVoteEntryAttributes,
   "id"
 > {}
-class ChildrenDay
-  extends Model<ChildrenDayEntryAttributes, ChildrenDayEntryCreationAttributes>
-  implements ChildrenDayEntryAttributes
+class ChildrenDayVotes
+  extends Model<
+    ChildrenDayVoteEntryAttributes,
+    ChildrenDayVotesCreationAttributes
+  >
+  implements ChildrenDayVoteEntryAttributes
 {
   public id!: number;
+  public children_day_id!: number;
   public user_id!: number;
-  public image!: string;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
 
-ChildrenDay.init(
+ChildrenDayVotes.init(
   {
     id: {
       type: DataTypes.INTEGER.UNSIGNED,
       autoIncrement: true,
       primaryKey: true,
     },
+    children_day_id: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
     user_id: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
-
-    image: { type: DataTypes.TEXT, allowNull: false },
   },
   {
     sequelize,
-    tableName: "children_day",
+    tableName: "children_day_votes",
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
   },
 );
 
-export default ChildrenDay;
+export default ChildrenDayVotes;
