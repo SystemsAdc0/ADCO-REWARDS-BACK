@@ -38,7 +38,7 @@ const globalLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 500,
+  max: 400,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "Demasiados intentos de acceso, intenta en 15 minutos." },
@@ -109,7 +109,7 @@ async function start() {
     await sequelize.authenticate();
     console.log("Conexion a MySQL establecida.");
 
-    await sequelize.sync({ alter: true });
+    // await sequelize.sync({ alter: true });
     console.log("Modelos sincronizados.");
     const server = app.listen(PORT, () => {
       console.log(`Servidor corriendo en http://localhost:${PORT}`);

@@ -23,17 +23,18 @@ export const getActivities = async (
       return;
     }
 
-    // add new data
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-
+    // Desactivar actividades cuya end_date ya pasó, respetando el time_zone
+    // registrado en cada actividad. CONVERT_TZ convierte NOW() (UTC) al
+    // timezone de la actividad y lo compara con end_date (almacenado en
+    // ese mismo timezone local).
     await Activity.update(
       { status: "inactive" },
       {
         where: {
           status: "active",
-          end_date: { [Op.lt]: tomorrow },
+          [Op.and]: Sequelize.literal(
+            "CONVERT_TZ(NOW(), 'UTC', time_zone) >= end_date",
+          ),
         },
       },
     );
