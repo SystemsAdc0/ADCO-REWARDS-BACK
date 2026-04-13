@@ -23,13 +23,16 @@ export const getActivities = async (
       return;
     }
 
-    // Auto-desactivar actividades cuya fecha de fin ya pasó
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+
     await Activity.update(
       { status: "inactive" },
       {
         where: {
           status: "active",
-          end_date: { [Op.lt]: new Date() },
+          end_date: { [Op.lt]: tomorrow },
         },
       },
     );
