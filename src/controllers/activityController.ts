@@ -23,7 +23,7 @@ export const getActivities = async (
       return;
     }
 
-    // add new data 
+    // add new data
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(0, 0, 0, 0);
@@ -91,8 +91,6 @@ export const createActivity = async (
   req: AuthRequest,
   res: Response,
 ): Promise<void> => {
-  console.log(req.body);
-
   try {
     const activity = await Activity.create(req.body);
     const { social_medias } = req.body;
