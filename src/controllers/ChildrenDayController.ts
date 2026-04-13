@@ -106,7 +106,7 @@ export const vote = async (req: AuthRequest, res: Response): Promise<void> => {
       user_id: req.user.id,
       children_day_id: Number(req.params.id),
     });
-    res.status(200).json({ message: "Voto registrado!" });
+    res.status(200).json({ message: "¡Voto registrado!" });
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
   }
