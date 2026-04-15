@@ -1,5 +1,5 @@
-import { sendEmail } from "../config/SendEmail";
 import { Notification, User } from "../models";
+import { sendEmail } from "./sendEmail";
 
 type NotifType = "info" | "success" | "warning";
 
