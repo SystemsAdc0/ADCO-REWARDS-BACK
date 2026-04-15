@@ -59,7 +59,7 @@ export const getParticipatingUsers = async (
       include: [
         {
           association: "user",
-          attributes: ["id", "name"],
+          attributes: ["id", "name", "avatar"],
         },
         {
           association: "votes",
