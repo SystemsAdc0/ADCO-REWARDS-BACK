@@ -49,13 +49,15 @@ export const getParticipatingUsers = async (
   req: AuthRequest,
   res: Response,
 ): Promise<void> => {
+  //  {
+  //         association: "votes",
+  //         separate: true,
+  //         required: false,
+  //         include: [{ association: "user", attributes: ["id", "name"] }],
+  //       },
   try {
     const participate = await ChildrenDay.findAll({
-      attributes: [
-        "id",
-        "image",
-        [sequelize.fn("COUNT", sequelize.col("votes.id")), "votes"],
-      ],
+      attributes: ["id", "image"],
       include: [
         {
           association: "user",
@@ -63,17 +65,22 @@ export const getParticipatingUsers = async (
         },
         {
           association: "votes",
-          attributes: [],
+          separate: true, // 🔥 clave
           required: false,
+          attributes: ["id"],
+          include: [
+            {
+              association: "user",
+              attributes: ["id", "name"],
+            },
+          ],
         },
       ],
-      group: ["ChildrenDay.id", "user.id", "user.name"],
-      subQuery: false,
-      raw: true,
-      nest: true,
     });
     res.status(200).json(participate);
   } catch (err) {
+    console.log(err);
+
     res.status(500).json({ message: "Error", error: err });
   }
 };

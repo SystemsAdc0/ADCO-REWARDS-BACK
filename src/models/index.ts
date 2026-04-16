@@ -78,6 +78,14 @@ ChildrenDay.hasMany(ChildrenDayVotes, {
   foreignKey: "children_day_id",
   as: "votes",
 });
+// ChildrenDay.hasMany(ChildrenDayVotes, {
+//   foreignKey: "children_day_id",
+//   as: "votesCount",
+// });
+ChildrenDayVotes.belongsTo(User, {
+  foreignKey: "user_id",
+  as: "user",
+});
 //children day votes
 ChildrenDayVotes.belongsTo(ChildrenDay, {
   foreignKey: "children_day_id",
