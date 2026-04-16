@@ -157,9 +157,10 @@ export const updateRedemptionStatus = async (
     const redemption = await Redemption.findByPk(String(req.params.id), {
       include: [
         { association: "prize" },
-        { association: "user", attributes: ["id", "points"] },
+        { association: "user", attributes: ["id", "points", "email"] },
       ],
     });
+
     if (!redemption) {
       res.status(404).json({ message: "Canje no encontrado" });
       return;
@@ -211,6 +212,8 @@ export const updateRedemptionStatus = async (
       status === "rejected"
         ? `Tu canje del ${prize?.name} fue cancelado , se te devolvieron ${redemption.points_spent} pst`
         : `Tu canje de "${prize?.name}" fue actualizado a: ${statusSpanish[status]}`;
+  
+
     await createNotification(redemption.user_id, msg, "info");
     res.json({
       message: "Estado actualizado",
