@@ -42,7 +42,7 @@ export const createPointRequest = async (
 
     await createNotification(
       target_id,
-      `${requester.name} te está solicitando ${points} puntos${message ? `: "${message}"` : ""}. Ingresa a la sección de solicitudes para responder.`,
+      `${requester.name} te está solicitando ${points} puntos ${message ? `: "${message}"` : ""}. Ingresa a la sección de solicitudes para responder.`,
       "warning",
     );
 
@@ -175,6 +175,7 @@ export const respondToRequest = async (
           requester.id,
           `${target.name} rechazó tu solicitud de ${request.points} puntos.`,
           "info",
+          status
         );
       }
     }
