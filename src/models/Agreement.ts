@@ -31,7 +31,7 @@ Agreement.init(
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     name: { type: DataTypes.STRING, allowNull: false },
-    description: { type: DataTypes.STRING, allowNull: false },
+    description: { type: DataTypes.TEXT("long"), allowNull: false },
     page: { type: DataTypes.STRING, allowNull: true },
     maps_url: { type: DataTypes.STRING(500), allowNull: true },
     created_at: { type: DataTypes.DATE, allowNull: false },
