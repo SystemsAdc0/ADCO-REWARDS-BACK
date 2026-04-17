@@ -1,10 +1,9 @@
-export async function sendEmail({
-  to,
-  message,
-}: {
+interface Props {
   to: string;
   message: string;
-}) {
+}
+
+export async function sendEmail({ to, message }: Props) {
   try {
     if (process.env.NODE_ENV === "production") {
       if (!to || !message) {

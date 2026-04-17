@@ -314,14 +314,14 @@ export const reviewEntry = async (
         });
         await createNotification(
           user.id,
-          `Ganaste ${activity.points_reward} puntos por "${activity.name}"`,
+          `Ganaste ${activity.points_reward} puntos por ${activity.name}`,
           "success",
         );
       }
     } else {
       await createNotification(
         entry.user_id,
-        `Tu participacion en "${(entry as any).activity?.name}" fue rechazada. Motivo: ${review_notes}`,
+        `Tu participacion en ${(entry as any).activity?.name} fue rechazada. Motivo: ${review_notes}`,
         "warning",
       );
     }
