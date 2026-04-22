@@ -124,19 +124,33 @@ export const googleActivityEntries = async (
   try {
     const { filename, contentType } = req.body;
 
+    if (!filename) {
+      res.status(400).json({ message: "filename es requerido" });
+      return;
+    }
+
     const ext = filename.split(".").pop()?.toLowerCase() || "bin";
     const objectName = `activity_entries/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+
+    // Videos pueden tardar varios minutos en subirse; se extiende el tiempo
+    // de expiración del signed URL para evitar 403 por tiempo agotado.
+    const resolvedContentType =
+      contentType && contentType.trim() !== ""
+        ? contentType
+        : "application/octet-stream";
+    const isVideo = resolvedContentType.startsWith("video/");
+    const expiryMs = isVideo ? 60 * 60 * 1000 : 10 * 60 * 1000;
 
     const file = bucket.file(objectName);
 
     const [url] = await file.getSignedUrl({
       version: "v4",
       action: "write",
-      expires: Date.now() + 5 * 60 * 1000,
-      contentType,
+      expires: Date.now() + expiryMs,
+      contentType: resolvedContentType,
     });
 
-    res.json({ url, objectName });
+    res.json({ url, objectName, contentType: resolvedContentType });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Error generando signed upload URL" });

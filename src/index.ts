@@ -38,7 +38,7 @@ const globalLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 400,
+  max: 4000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "Demasiados intentos de acceso, intenta en 15 minutos." },
