@@ -4,29 +4,31 @@ interface Props {
 }
 
 export async function sendEmail({ to, message }: Props) {
-  try {
-    if (process.env.NODE_ENV === "production") {
-      if (!to || !message) {
-        throw Error("falta de identificadores");
-      }
-      await fetch(`${process.env.N8N_URL}`, {
-        method: "POST",
-        headers: {
-          "Content-type": "application/json",
-          "x-api-key": process.env.N8N_KEY,
-        },
-        body: JSON.stringify({
-          from: "AdcoRewards",
-          to: to,
-          subject: "Adco Rewards",
-          message: message,
-        }),
-      });
-    } else {
-      console.log("el correo no se envia estando en desarrollo");
-    }
-  } catch (error) {
-    console.error(error);
+  if (process.env.NODE_ENV !== "production") {
+    console.log("el correo no se envia estando en desarrollo");
+    return;
+  }
+
+  if (!to || !message) {
+    throw new Error("falta de identificadores");
+  }
+
+  const response = await fetch(`${process.env.N8N_URL}`, {
+    method: "POST",
+    headers: {
+      "Content-type": "application/json",
+      "x-api-key": process.env.N8N_KEY ?? "",
+    },
+    body: JSON.stringify({
+      from: "AdcoRewards",
+      to,
+      subject: "Adco Rewards",
+      message,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error al enviar correo: ${response.status} ${response.statusText}`);
   }
 }
 
