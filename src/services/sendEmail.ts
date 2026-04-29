@@ -28,7 +28,9 @@ export async function sendEmail({ to, message }: Props) {
   });
 
   if (!response.ok) {
-    throw new Error(`Error al enviar correo: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Error al enviar correo: ${response.status} ${response.statusText}`,
+    );
   }
 }
 

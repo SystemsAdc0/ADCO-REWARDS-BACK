@@ -140,7 +140,7 @@ const Template = ({ name, message, type, status }: TemplateProps) => {
             <tr>
               <td style="text-align:center; padding:0 0 0 0;">
                 <img
-                  src="https://storage.googleapis.com/adco_rewards_public/logos/TROFEO2.svg"
+                  src="https://storage.googleapis.com/adco_rewards_public/logos/TROFEO2.png"
                   width="160"
                   style="display:block; margin:0 auto;"
                   alt="ADCO Rewards"

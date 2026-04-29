@@ -1,14 +1,5 @@
 import { col, fn, literal } from "sequelize";
-import { register } from "../controllers/authController";
-import {
-  Activity,
-  ActivityEntry,
-  ChildrenDay,
-  ChildrenDayVotes,
-  Notification,
-  PointHistory,
-  User,
-} from "../models";
+import { ActivityEntry, ChildrenDay, ChildrenDayVotes, User } from "../models";
 import { ActivityEntryStatus } from "../types";
 import { createNotification } from "../services/notificationService";
 

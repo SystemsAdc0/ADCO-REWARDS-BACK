@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
-import { Prize } from "../models";
+import { Notification, Prize, User } from "../models";
 import { AuthRequest } from "../types";
+import { createNotification } from "../services/notificationService";
 
 export const getPrizes = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -45,6 +46,23 @@ export const createPrize = async (
       description: description?.trim(),
     };
     const prize = await Prize.create(formattedData);
+
+    const users = await User.findAll({
+      where: { status: "active" },
+      attributes: ["id"],
+      raw: true,
+    });
+
+    const message = `Se acaba de agregar un nuevo premio: ${name?.trim().toUpperCase()}, participa para ganar!`;
+
+    const notifications = users.map((u) => ({
+      user_id: u.id,
+      message,
+      type: "info" as const,
+    }));
+
+    await Notification.bulkCreate(notifications);
+
     res.status(201).json(prize);
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
