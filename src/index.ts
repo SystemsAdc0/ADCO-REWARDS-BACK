@@ -23,6 +23,7 @@ import googleFiles from "./routes/googleCloud";
 import agreements from "./routes/agreements";
 import pointRequests from "./routes/pointRequests";
 import childrenDay from "./routes/childrenDay";
+import { registerPoints } from "./config/autoQuerys";
 
 const app = express();
 const PORT = process.env.PORT || 4000;

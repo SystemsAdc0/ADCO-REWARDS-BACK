@@ -1,89 +1,102 @@
 import { NotifType } from "./notificationService";
 
-interface User {
+export type Status = "success" | "rejected" | "delivered" | "pending" | "approved";
+
+interface TemplateProps {
   name: string;
   message: string;
   type: NotifType;
-  status?: string;
+  status?: Status;
 }
+
 export function transformMessage(text: string) {
-  let message = text;
-
-  const words = text.split(" ");
-
-  for (const word of words) {
-    const isNumber = /^\d+$/.test(word);
-
-    if (isNumber) {
-      return (message = text.replace(
+  for (const word of text.split(" ")) {
+    if (/^\d+$/.test(word)) {
+      return text.replace(
         `${word} puntos`,
         `<span style="
-                    background-color: #fbbf24;
-                    margin: 0px;
-                    color: #ffff
-                    padding: 5px 5px 5px 5px;
-                    font-size: 16px;
-                    letter-spacing: 1px;
-                    font-weight: semi-bold;
-                    border-radius: 999px;
-                  ">${word} puntos</span>`,
-      ));
+          background-color: #fbbf24;
+          margin: 0px;
+          color: #ffffff;
+          padding: 5px 5px 5px 5px;
+          font-size: 16px;
+          letter-spacing: 1px;
+          font-weight: semi-bold;
+          border-radius: 999px;
+        ">${word} puntos</span>`,
+      );
     }
   }
-  return message;
+  return text;
 }
 
-const ICONS = {
-  success: "circle-check-solid.png",
-  warning: "circle-xmark-solid.png",
-  info: "circle-info-solid.png",
+const THEME_CONFIG: Record<NotifType, { label: string }> = {
+  success: { label: "¡Logro desbloqueado!" },
+  warning: { label: "Atención requerida ⚠️" },
+  info: { label: "Información extra" },
 };
 
 const buildImage = (icon: string, size = 20) => `
-  <img 
-    src="https://storage.googleapis.com/adco_rewards_public/logos/${icon}" 
-    width="${size}" 
+  <img
+    src="https://storage.googleapis.com/adco_rewards_public/logos/${icon}"
+    width="${size}"
     height="${size}"
     style="display:block; border-radius:9999px; background: #ffffff;"
     alt="icon"
   />
 `;
 
-const STATUS_STYLES: Record<string, Record<string, string>> = {
+const STATUS_STYLES: Record<
+  Status,
+  { bg: string; border: string; color: string; text: string; icon: string }
+> = {
   approved: {
     bg: "#052e16",
     border: "#22c55e",
     color: "#bbf7d0",
     text: "Tu solicitud ha sido aprobada correctamente.",
+    icon: "circle-check-solid.png",
   },
   pending: {
     bg: "#422006",
     border: "#f59e0b",
     color: "#fde68a",
     text: "⏳ Tu solicitud está en proceso de revisión.",
+    icon: "circle-info-solid.png",
   },
   delivered: {
     bg: "#0c4a6e",
     border: "#0ea5e9",
     color: "#bae6fd",
     text: "📦 Tu recompensa ya fue entregada.",
+    icon: "circle-info-solid.png",
   },
   rejected: {
     bg: "#450a0a",
     border: "#ef4444",
     color: "#fecaca",
     text: "Tu solicitud fue rechazada.",
+    icon: "circle-xmark-solid.png",
   },
   success: {
     bg: "#052e16",
     border: "#22c55e",
     color: "#bbf7d0",
     text: "Operación exitosa.",
+    icon: "circle-check-solid.png",
   },
 };
 
-const buildInfoExtra = (status?: string) => {
-  if (!status || !STATUS_STYLES[status]) return "";
+function resolveMainIcon(type: NotifType, status?: Status): string {
+  if (type !== "info") {
+    return `<span style="font-size:80px;">🏆</span>`;
+  }
+  const icon = status ? STATUS_STYLES[status].icon : "circle-info-solid.png";
+  return buildImage(icon, 80);
+}
+
+function buildInfoExtra(status?: Status): string {
+  if (!status) return "";
 
   const s = STATUS_STYLES[status];
 
@@ -102,51 +115,12 @@ const buildInfoExtra = (status?: string) => {
       </tr>
     </table>
   `;
-};
+}
 
-const Template = (user: User) => {
-  const { name, message, type, status } = user;
-
-  const mainImg = () => {
-    if (type !== "info") {
-      return `<span style="font-size:80px;">🏆</span>`;
-    }
-
-    const statusIcons: Record<string, string> = {
-      approved: "circle-check-solid.png",
-      success: "circle-check-solid.png",
-      pending: "circle-info-solid.png",
-      rejected: "circle-xmark-solid.png",
-      delivered: "circle-info-solid.png",
-    };
-
-    const icon = status ? statusIcons[status] : ICONS.info;
-
-    return buildImage(icon, 80);
-  };
-
-  const colors = {
-    success: {
-      accent: "#22c55e!",
-      label: "¡Logro desbloqueado!",
-      icon: buildImage(ICONS.success),
-    },
-    warning: {
-      accent: "#f59e0b!",
-      label: "Atención requerida ⚠️",
-      icon: buildImage(ICONS.warning),
-    },
-    info: {
-      accent: "#2960FF!",
-      label: "Información extra",
-      icon: buildImage(ICONS.info),
-    },
-  };
-
-  const theme = colors[type || "info"];
-
+const Template = ({ name, message, type, status }: TemplateProps) => {
+  const theme = THEME_CONFIG[type ?? "info"];
   const tag = buildInfoExtra(status);
-  const image = mainImg();
+  const image = resolveMainIcon(type, status);
 
   return `<!doctype html>
 <html>
@@ -165,9 +139,9 @@ const Template = (user: User) => {
             <!-- LOGO -->
             <tr>
               <td style="text-align:center; padding:0 0 0 0;">
-                <img 
-                  src="https://storage.googleapis.com/adco_rewards_public/logos/TROFEO2.svg" 
-                  width="160" 
+                <img
+                  src="https://storage.googleapis.com/adco_rewards_public/logos/TROFEO2.svg"
+                  width="160"
                   style="display:block; margin:0 auto;"
                   alt="ADCO Rewards"
                 />
@@ -219,21 +193,12 @@ const Template = (user: User) => {
                         padding:8px 14px;
                       "
                     >
-                      <!-- TABLA INTERNA PARA ICONO + TEXTO -->
                       <table cellpadding="0" cellspacing="0">
                         <tr>
-                          <!-- ICONO -->
-                          <!-- <td style="vertical-align:middle;">
-                            ${theme.icon}
-                          </td> -->
-
-                          <!-- ESPACIO -->
                           <td width="6"></td>
-
-                          <!-- TEXTO -->
                           <td
                             style="
-                              color: #ffffff!;
+                              color: #ffffff;
                               font-size:13px;
                               font-weight:600;
                               vertical-align:middle;
@@ -261,7 +226,7 @@ const Template = (user: User) => {
                     </td>
 
                     <!-- ICONO -->
-                    <td 
+                    <td
                       width="80"
                       style="text-align:right; vertical-align:middle;"
                     >
@@ -282,7 +247,7 @@ const Template = (user: User) => {
                         style="
                           display:block;
                           padding:14px 24px;
-                          color: #ffff;
+                          color: #ffffff;
                           font-weight:bold;
                           text-decoration:none;
                         ">
@@ -336,7 +301,6 @@ const Template = (user: User) => {
     </table>
   </body>
 </html>
-
 `;
 };
 
@@ -349,7 +313,7 @@ export function formatTemplate({
   type: NotifType;
   message: string;
   name: string;
-  status?: string;
+  status?: Status;
 }) {
   return Template({
     name,
@@ -358,3 +322,13 @@ export function formatTemplate({
     status,
   });
 }
+
+// $ curl -X POST https://auto.adco.adi.mx/webhook/send-email \
+//   -H "Content-Type: application/json" \
+//   -H "x-api-key: adc0#CDA" \
+//   -d '{
+//     "from": "AdcoRewards",
+//     "to": "jorgealbertolejim@gmail.com",
+//     "subject": "Asunto del correo",
+//     "message": "prueba de correo"
+//   }'

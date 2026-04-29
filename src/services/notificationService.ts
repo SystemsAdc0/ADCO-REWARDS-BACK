@@ -1,5 +1,7 @@
 import { Notification, User } from "../models";
 import { formatTemplate } from "./emailTemplates";
+import type { Status } from "./emailTemplates";
+
 import { sendEmail } from "./sendEmail";
 
 export type NotifType = "info" | "success" | "warning";
@@ -8,13 +10,11 @@ export const createNotification = async (
   user_id: number,
   message: string,
   type: NotifType = "info",
-  status?: string,
+  status?: Status,
 ) => {
   //enviamos un correo de la notificacion
   const user = await User.findByPk(String(user_id));
-
   if (!user) return;
-
   try {
     await sendEmail({
       to: user.email,
