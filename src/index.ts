@@ -23,7 +23,6 @@ import googleFiles from "./routes/googleCloud";
 import agreements from "./routes/agreements";
 import pointRequests from "./routes/pointRequests";
 import childrenDay from "./routes/childrenDay";
-import { registerPoints } from "./config/autoQuerys";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -86,7 +85,6 @@ app.use(
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // API Routes
-registerPoints()
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/prizes", prizeRoutes);
