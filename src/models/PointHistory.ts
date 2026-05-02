@@ -18,14 +18,14 @@ class PointHistory
   implements PointHistoryAttributes
 {
   public id!: number;
-  public user_id!: number;
+  public user_id!: number; 
   public points!: number;
   public action!: 'earned' | 'spent' | 'adjusted';
   public description!: string;
   public assigned_by?: number;
   public readonly created_at!: Date;
 }
-
+ 
 PointHistory.init(
   {
     id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },

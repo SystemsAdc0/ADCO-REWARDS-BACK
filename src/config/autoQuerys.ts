@@ -16,7 +16,7 @@ export const registerPoints = async () => {
           model: ChildrenDayVotes,
           as: "votes",
           attributes: [],
-          required: true,
+          required: false,
         },
       ],
       group: ["ChildrenDay.user_id", "ChildrenDay.image"],
@@ -39,12 +39,13 @@ export const registerPoints = async () => {
         const employee = await User.findByPk(u.user_id);
 
         if (employee?.dataValues.id === users[0].user_id) {
+          console.log("la persona que tuvo mas puntos ", users[0].user_id);
           await ActivityEntry.create(register);
           await employee.update({ points: employee.points + 150 });
           await createNotification(
             u.user_id,
             `Se a asignado 150 puntos fuiste la ganadora de la actvidad del dia del niño , felicidades!`,
-            "success",
+            "success", 
             "approved",
           );
         } else {
@@ -64,7 +65,7 @@ export const registerPoints = async () => {
     console.error("Error registering points:", error);
   }
 };
-
+ 
 //   {
 //     user_id: 10,
 //     image: 'https://storage.googleapis.com/adco_rewards_public/children_day/1776279873240-b1030296-bd06-4dc8-984f-ec6953235c2f.webp',
