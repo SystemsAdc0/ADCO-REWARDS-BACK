@@ -23,11 +23,9 @@ import googleFiles from "./routes/googleCloud";
 import agreements from "./routes/agreements";
 import pointRequests from "./routes/pointRequests";
 import childrenDay from "./routes/childrenDay";
-import { registerPoints } from "./config/autoQuerys";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
-registerPoints()
 // Rate limiters
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
