@@ -31,3 +31,4 @@ export type ActivityEntryStatus = "pending" | "approved" | "rejected";
 export type ActivityStatus = "active" | "inactive" | "finished";
 export type PrizeStatus = "active" | "inactive";
 export type UserStatus = "active" | "inactive";
+export type ActivityAnswerStatus = "pending" | "approved" | "rejected";

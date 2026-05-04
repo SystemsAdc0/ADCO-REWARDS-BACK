@@ -11,11 +11,14 @@ import AgreementImage from "./AgreementImage";
 import PointRequest from "./PointRequest";
 import ChildrenDay from "./ChildrenDay";
 import ChildrenDayVotes from "./ChildrenDayVote";
+import ActivityQuestion from "./ActivityQuestion";
+import ActivityAnswer from "./ActivityAnswer";
 // User associations
 User.hasMany(Redemption, { foreignKey: "user_id", as: "redemptions" });
 User.hasMany(PointHistory, { foreignKey: "user_id", as: "pointHistory" });
 User.hasMany(ActivityEntry, { foreignKey: "user_id", as: "entries" });
 User.hasMany(Notification, { foreignKey: "user_id", as: "notifications" });
+User.hasMany(ActivityAnswer, { foreignKey: "user_id", as: "entrie_answers" });
 
 // Prize associations
 Prize.hasMany(Redemption, { foreignKey: "prize_id", as: "redemptions" });
@@ -30,6 +33,10 @@ PointHistory.belongsTo(User, { foreignKey: "assigned_by", as: "assigner" });
 
 // Activity associations
 Activity.hasMany(ActivityEntry, { foreignKey: "activity_id", as: "entries" });
+Activity.hasMany(ActivityQuestion, {
+  foreignKey: "activity_id",
+  as: "questions",
+});
 
 // ActivityEntry associations
 ActivityEntry.belongsTo(User, { foreignKey: "user_id", as: "user" });
@@ -69,6 +76,24 @@ AgreementImage.belongsTo(Agreement, {
   foreignKey: "agreement_id",
   as: "agreement",
 });
+
+// Activities Questions associations
+ActivityQuestion.hasMany(ActivityAnswer, {
+  foreignKey: "activity_question_id",
+  as: "answers",
+});
+ActivityQuestion.belongsTo(Activity, {
+  foreignKey: "activity_id",
+  as: "activity",
+});
+
+// Activities answer associations
+ActivityAnswer.belongsTo(ActivityQuestion, {
+  foreignKey: "activity_question_id",
+  as: "question",
+});
+ActivityAnswer.belongsTo(User, { foreignKey: "user_id", as: "user" });
+
 //chidren day
 ChildrenDay.belongsTo(User, {
   foreignKey: "user_id",

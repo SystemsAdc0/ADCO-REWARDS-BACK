@@ -11,6 +11,9 @@ import { createNotification } from "../services/notificationService";
 import { Sequelize, Op, where } from "sequelize";
 import SocialMedia from "../models/SocialMedia";
 import { deleteActivityEntryFile } from "./googleCloudController";
+import ActivityQuestion from "../models/ActivityQuestion";
+import ActivityAnswer from "../models/ActivityAnswer";
+import sequelize from "../config/database";
 
 export const getActivities = async (
   req: AuthRequest,
@@ -56,11 +59,18 @@ export const getActivities = async (
           ],
         ],
       },
-      include: {
-        model: SocialMedia,
-        as: "social_medias",
-        attributes: ["name"],
-      },
+      include: [
+        {
+          model: SocialMedia,
+          as: "social_medias",
+          attributes: ["name"],
+        },
+        {
+          model: ActivityQuestion,
+          as: "questions",
+          attributes: ["id", "question"],
+        },
+      ],
       // where: user.role == "admin" ? {} : { status: "active" },
       order: [["id", "DESC"]],
     });
@@ -94,7 +104,7 @@ export const createActivity = async (
 ): Promise<void> => {
   try {
     const activity = await Activity.create(req.body);
-    const { social_medias } = req.body;
+    const { social_medias, questions } = req.body;
 
     for (let s of social_medias) {
       await SocialMedia.create({
@@ -102,10 +112,16 @@ export const createActivity = async (
         name: s.name,
       });
     }
+
+    for (let q of questions) {
+      await ActivityQuestion.create({
+        activity_id: activity.dataValues.id,
+        question: q.name,
+      });
+    }
     res.status(201).json(activity);
   } catch (err) {
     console.log(err);
-
     res.status(500).json({ message: "Error", error: err });
   }
 };
@@ -172,12 +188,37 @@ export const joinActivity = async (
   try {
     const userId = req.user!.id;
     const activityId = parseInt(String(req.params.id));
+    const { questions } = req.body;
     const activityExist = await ActivityEntry.findOne({
       where: {
         user_id: userId,
         activity_id: activityId,
       },
     });
+
+    const activityQuestions = await ActivityQuestion.findAll({
+      where: { activity_id: activityId },
+      attributes: ["id"],
+    });
+
+    if (
+      activityQuestions.length > 0 &&
+      (!questions || questions.length === 0)
+    ) {
+      res.status(400).json({
+        message: "Esta actividad requiere responder preguntas",
+      });
+    }
+
+    const validQuestionIds = activityQuestions.map((q) => q.id);
+
+    for (let q of questions || []) {
+      if (!validQuestionIds.includes(q.id)) {
+        res.status(400).json({
+          message: `La pregunta con id ${q.id} no pertenece a la actividad`,
+        });
+      }
+    }
 
     if (activityExist?.dataValues) {
       await ActivityEntry.update(
@@ -194,20 +235,45 @@ export const joinActivity = async (
         },
       );
       res.status(201).json({
-        message: "Participacion registrada, pendiente de revision",
+        message: "Participación registrada, pendiente de revisión",
         activityExist,
       });
       return;
     }
-    const entry = await ActivityEntry.create({
-      user_id: userId,
-      activity_id: activityId,
-      file: req.body.file,
-    });
-    res.status(201).json({
-      message: "Participacion registrada, pendiente de revision",
-      entry,
-    });
+
+    const t = await sequelize.transaction();
+
+    try {
+      const entry = await ActivityEntry.create(
+        {
+          user_id: userId,
+          activity_id: activityId,
+          file: req.body.file,
+        },
+        { transaction: t },
+      );
+
+      if (activityQuestions.length > 0) {
+        const answersToCreate = questions.map((q: any) => ({
+          activity_question_id: q.id,
+          status: "pending",
+          answer: q.answer,
+          user_id: userId,
+        }));
+
+        await ActivityAnswer.bulkCreate(answersToCreate, { transaction: t });
+      }
+
+      await t.commit();
+
+      res.status(201).json({
+        message: "Participación registrada, pendiente de revisión",
+        entry,
+      });
+    } catch (error) {
+      await t.rollback();
+      throw error;
+    }
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Error", error: err });
