@@ -41,13 +41,12 @@ ActivityAnswer.init(
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
     },
-    
     user_id: {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
     },
     answer: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.TEXT,
       allowNull: false,
     },
     status: {
