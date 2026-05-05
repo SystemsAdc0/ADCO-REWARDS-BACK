@@ -47,13 +47,27 @@ export const getActivities = async (
         include: [
           [
             Sequelize.literal(
-              `EXISTS (SELECT 1 FROM activity_entries ae WHERE ae.activity_id = Activity.id AND ae.user_id = ${user.id} AND ae.status != 'rejected')`,
+              `EXISTS (
+            SELECT 1 
+            FROM activity_entries ae 
+            WHERE ae.activity_id = Activity.id 
+              AND ae.user_id = ${user.id} 
+              AND ae.status != 'rejected'
+          )`,
             ),
             "participate",
           ],
           [
             Sequelize.literal(
-              `(SELECT ae.review_notes FROM activity_entries ae WHERE ae.activity_id = Activity.id AND ae.user_id = ${user.id} AND ae.status = 'rejected' ORDER BY ae.updated_at DESC LIMIT 1)`,
+              `(
+            SELECT ae.review_notes 
+            FROM activity_entries ae 
+            WHERE ae.activity_id = Activity.id 
+              AND ae.user_id = ${user.id} 
+              AND ae.status = 'rejected' 
+            ORDER BY ae.updated_at DESC 
+            LIMIT 1
+          )`,
             ),
             "note",
           ],
@@ -69,9 +83,17 @@ export const getActivities = async (
           model: ActivityQuestion,
           as: "questions",
           attributes: ["id", "question"],
+          required: false,
+          include: [
+            {
+              model: ActivityAnswer,
+              as: "answers",
+              attributes: ["answer", "status"],
+              required: false,
+            },
+          ],
         },
       ],
-      // where: user.role == "admin" ? {} : { status: "active" },
       order: [["id", "DESC"]],
     });
 
@@ -116,7 +138,7 @@ export const createActivity = async (
     for (let q of questions) {
       await ActivityQuestion.create({
         activity_id: activity.dataValues.id,
-        question: q.name,
+        question: q,
       });
     }
     res.status(201).json(activity);
