@@ -78,7 +78,7 @@ AgreementImage.belongsTo(Agreement, {
 });
 
 // Activities Questions associations
-ActivityQuestion.hasMany(ActivityAnswer, {
+ActivityQuestion.hasOne(ActivityAnswer, {
   foreignKey: "activity_question_id",
   as: "answers",
 });

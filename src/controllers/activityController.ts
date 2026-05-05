@@ -15,6 +15,96 @@ import ActivityQuestion from "../models/ActivityQuestion";
 import ActivityAnswer from "../models/ActivityAnswer";
 import sequelize from "../config/database";
 
+export const getActivitiesAdmin = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const user = req.user;
+    if (!user?.id) {
+      res.status(403).json("usuario no identificado");
+      return;
+    }
+
+    // Desactivar actividades cuya end_date ya pasó, respetando el time_zone
+    // registrado en cada actividad. CONVERT_TZ convierte NOW() (UTC) al
+    // timezone de la actividad y lo compara con end_date (almacenado en
+    // ese mismo timezone local).
+    await Activity.update(
+      { status: "inactive" },
+      {
+        where: {
+          status: "active",
+          [Op.and]: Sequelize.literal(
+            "CONVERT_TZ(NOW(), 'UTC', time_zone) >= end_date",
+          ),
+        },
+      },
+    );
+
+    const activities = await Activity.findAll({
+      attributes: {
+        include: [
+          [
+            Sequelize.literal(
+              `EXISTS (
+            SELECT 1 
+            FROM activity_entries ae 
+            WHERE ae.activity_id = Activity.id 
+              AND ae.user_id = ${user.id} 
+              AND ae.status != 'rejected'
+          )`,
+            ),
+            "participate",
+          ],
+          [
+            Sequelize.literal(
+              `(
+            SELECT ae.review_notes 
+            FROM activity_entries ae 
+            WHERE ae.activity_id = Activity.id 
+              AND ae.user_id = ${user.id} 
+              AND ae.status = 'rejected' 
+            ORDER BY ae.updated_at DESC 
+            LIMIT 1
+          )`,
+            ),
+            "note",
+          ],
+        ],
+      },
+      include: [
+        {
+          model: SocialMedia,
+          as: "social_medias",
+          attributes: ["name"],
+        },
+        {
+          model: ActivityQuestion,
+          as: "questions",
+          attributes: ["id", "question"],
+          required: false,
+          include: [
+            {
+              model: ActivityAnswer,
+              as: "answers",
+              attributes: ["id", "answer", "status"],
+              where: { user_id: user.id },
+              required: false,
+            },
+          ],
+        },
+      ],
+      order: [["id", "DESC"]],
+    });
+
+    res.json(activities);
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
 export const getActivities = async (
   req: AuthRequest,
   res: Response,
@@ -88,7 +178,8 @@ export const getActivities = async (
             {
               model: ActivityAnswer,
               as: "answers",
-              attributes: ["answer", "status"],
+              attributes: ["id", "answer", "status"],
+              where: { user_id: user.id },
               required: false,
             },
           ],
@@ -152,15 +243,86 @@ export const updateActivity = async (
   req: AuthRequest,
   res: Response,
 ): Promise<void> => {
+  const t = await sequelize.transaction();
   try {
     const activity = await Activity.findByPk(String(req.params.id));
+
     if (!activity) {
+      await t.rollback();
       res.status(404).json({ message: "Actividad no encontrada" });
       return;
     }
-    await activity.update(req.body);
-    res.json(activity);
+
+    const { social_medias, questions, ...activityFields } = req.body;
+
+    await activity.update(activityFields, { transaction: t });
+
+    if (Array.isArray(social_medias)) {
+      await SocialMedia.destroy({
+        where: { activity_id: activity.id },
+        transaction: t,
+      });
+      if (social_medias.length > 0) {
+        await SocialMedia.bulkCreate(
+          social_medias.map((s: { name: string }) => ({
+            activity_id: activity.id,
+            name: s.name as "whatsapp" | "instagram" | "engage" | "platform",
+          })),
+          { transaction: t },
+        );
+      }
+    }
+
+    if (Array.isArray(questions)) {
+      const existingQuestions = await ActivityQuestion.findAll({
+        where: { activity_id: activity.id },
+        transaction: t,
+      });
+
+      const newTexts: string[] = questions;
+
+      const toDelete = existingQuestions.filter(
+        (q) => !newTexts.includes(q.question),
+      );
+      const toCreate = newTexts.filter(
+        (text) => !existingQuestions.some((q) => q.question === text),
+      );
+
+      if (toDelete.length > 0) {
+        const deleteIds = toDelete.map((q) => q.id);
+        await ActivityAnswer.destroy({
+          where: { activity_question_id: deleteIds },
+          transaction: t,
+        });
+        await ActivityQuestion.destroy({
+          where: { id: deleteIds },
+          transaction: t,
+        });
+      }
+
+      if (toCreate.length > 0) {
+        await ActivityQuestion.bulkCreate(
+          toCreate.map((text) => ({
+            activity_id: activity.id,
+            question: text,
+          })),
+          { transaction: t },
+        );
+      }
+    }
+
+    await t.commit();
+
+    const updated = await Activity.findByPk(activity.id, {
+      include: [
+        { model: SocialMedia, as: "social_medias", attributes: ["name"] },
+        { model: ActivityQuestion, as: "questions", attributes: ["id", "question"] },
+      ],
+    });
+
+    res.json(updated);
   } catch (err) {
+    await t.rollback();
     res.status(500).json({ message: "Error", error: err });
   }
 };
@@ -330,6 +492,14 @@ export const getEntries = async (
           model: Activity,
           as: "activity",
           attributes: ["id", "name", "points_reward"],
+          include: [
+            {
+              model: ActivityQuestion,
+              as: "questions",
+              attributes: ["id", "question"],
+              required: false,
+            },
+          ],
         },
         ...(isAdmin
           ? [
@@ -345,7 +515,40 @@ export const getEntries = async (
       order: [["created_at", "DESC"]],
     });
 
-    res.json(entries.map((e) => e.get({ plain: true })));
+    const plainEntries = entries.map((e) => e.get({ plain: true }) as any);
+
+    // Batch-load all answers for all questions/users found in the entries
+    const allQuestionIds = plainEntries.flatMap((e) =>
+      ((e.activity as any)?.questions ?? []).map((q: any) => q.id),
+    );
+    const allUserIds = [...new Set(plainEntries.map((e) => e.user_id))];
+
+    if (allQuestionIds.length > 0) {
+      const answers = await ActivityAnswer.findAll({
+        where: { activity_question_id: allQuestionIds, user_id: allUserIds },
+        attributes: [
+          "id",
+          "answer",
+          "status",
+          "activity_question_id",
+          "user_id",
+        ],
+      });
+
+      const answerMap: Record<string, object> = {};
+      answers.forEach((a) => {
+        const p = a.get({ plain: true });
+        answerMap[`${p.activity_question_id}-${p.user_id}`] = p;
+      });
+
+      plainEntries.forEach((entry) => {
+        ((entry.activity as any)?.questions ?? []).forEach((q: any) => {
+          q.answers = answerMap[`${q.id}-${entry.user_id}`] ?? null;
+        });
+      });
+    }
+
+    res.json(plainEntries);
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
   }
@@ -369,52 +572,243 @@ export const reviewEntry = async (
     }
 
     const { status, review_notes } = req.body;
+    const activity = (entry as any).activity as {
+      points_reward: number;
+      name: string;
+    };
 
-    // La razon de rechazo es obligatoria
     if (status === "rejected") {
       if (!review_notes || String(review_notes).trim() === "") {
         res.status(400).json({ message: "La razon de rechazo es obligatoria" });
         return;
       }
-      // Eliminar el archivo de Google Cloud Storage para que el usuario pueda re-subir
-      if (entry.file) {
-        await deleteActivityEntryFile(entry.file);
+      if (entry.file) await deleteActivityEntryFile(entry.file);
+
+      // Rechazar todas las respuestas pendientes de esta participación
+      const questions = await ActivityQuestion.findAll({
+        where: { activity_id: entry.activity_id },
+        attributes: ["id"],
+      });
+      if (questions.length > 0) {
+        await ActivityAnswer.update(
+          { status: "rejected" },
+          {
+            where: {
+              activity_question_id: questions.map((q) => q.id),
+              user_id: entry.user_id,
+              status: "pending",
+            },
+          },
+        );
       }
+
+      await entry.update({ status, reviewed_by: req.user!.id, review_notes });
+      await createNotification(
+        entry.user_id,
+        `Tu participacion en "${activity?.name}" fue rechazada. Motivo: ${review_notes}`,
+        "warning",
+      );
+      res.json({ message: "Participacion rechazada", entry });
+      return;
     }
 
+    // ── Aprobación ──
     await entry.update({ status, reviewed_by: req.user!.id, review_notes });
 
-    if (status === "approved") {
-      const activity = (
-        entry as unknown as {
-          activity: { points_reward: number; name: string };
-        }
-      ).activity;
-      const user = await User.findByPk(entry.user_id);
-      if (user && activity) {
-        await user.update({ points: user.points + activity.points_reward });
-        await PointHistory.create({
-          user_id: user.id,
-          points: activity.points_reward,
-          action: "earned",
-          description: `Actividad aprobada: ${activity.name}`,
-          assigned_by: req.user!.id,
+    const questions = await ActivityQuestion.findAll({
+      where: { activity_id: entry.activity_id },
+      attributes: ["id"],
+    });
+
+    const allAnswersApproved =
+      questions.length === 0 ||
+      (await (async () => {
+        const answers = await ActivityAnswer.findAll({
+          where: {
+            activity_question_id: questions.map((q) => q.id),
+            user_id: entry.user_id,
+          },
         });
-        await createNotification(
-          user.id,
-          `Ganaste ${activity.points_reward} puntos por ${activity.name}`,
-          "success",
+        return (
+          answers.length === questions.length &&
+          answers.every((a) => a.status === "approved")
         );
+      })());
+
+    if (allAnswersApproved) {
+      const alreadyAwarded = await PointHistory.findOne({
+        where: {
+          user_id: entry.user_id,
+          description: `Actividad aprobada: ${activity?.name}`,
+        },
+      });
+      if (!alreadyAwarded && activity) {
+        const user = await User.findByPk(entry.user_id);
+        if (user) {
+          await user.update({ points: user.points + activity.points_reward });
+          await PointHistory.create({
+            user_id: user.id,
+            points: activity.points_reward,
+            action: "earned",
+            description: `Actividad aprobada: ${activity.name}`,
+            assigned_by: req.user!.id,
+          });
+          await createNotification(
+            user.id,
+            `¡Ganaste ${activity.points_reward} puntos por "${activity.name}"!`,
+            "success",
+          );
+        }
       }
     } else {
       await createNotification(
         entry.user_id,
-        `Tu participacion en ${(entry as any).activity?.name} fue rechazada. Motivo: ${review_notes}`,
-        "warning",
+        `Tu participacion en "${activity?.name}" fue aprobada. Tus respuestas aún están pendientes de revisión.`,
+        "success",
       );
     }
 
     res.json({ message: "Participacion revisada", entry });
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const updateAnswer = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const answer = await ActivityAnswer.findOne({
+      where: { id: String(req.params.id), user_id: req.user!.id },
+    });
+
+    if (!answer) {
+      res.status(404).json({ message: "Respuesta no encontrada" });
+      return;
+    }
+
+    if (answer.status !== "rejected") {
+      res
+        .status(400)
+        .json({ message: "Solo se pueden editar respuestas rechazadas" });
+      return;
+    }
+
+    await answer.update({ answer: req.body.answer, status: "pending" });
+    res.json(answer);
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const reviewAnswer = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const answer = await ActivityAnswer.findByPk(String(req.params.id));
+    if (!answer) {
+      res.status(404).json({ message: "Respuesta no encontrada" });
+      return;
+    }
+
+    const { status } = req.body as { status: "approved" | "rejected" };
+
+    await answer.update({ status });
+
+    // Buscar contexto para notificación y verificación de puntos
+    const question = await ActivityQuestion.findByPk(
+      answer.activity_question_id,
+    );
+    if (!question) {
+      res.json(answer);
+      return;
+    }
+
+    const activity = await Activity.findByPk(question.activity_id);
+    const activityName = activity?.name ?? "";
+
+    if (status === "rejected") {
+      await createNotification(
+        answer.user_id,
+        `Tu respuesta en "${activityName}" fue rechazada por un moderador.`,
+        "warning",
+      );
+      res.json(answer);
+      return;
+    }
+
+    // Aprobada — notificar y verificar si se deben otorgar puntos
+    await createNotification(
+      answer.user_id,
+      `Tu respuesta en "${activityName}" fue aprobada.`,
+      "success",
+    );
+
+    // Verificar si TODAS las respuestas de este usuario para esta actividad están aprobadas
+    const allQuestions = await ActivityQuestion.findAll({
+      where: { activity_id: question.activity_id },
+      attributes: ["id"],
+    });
+    const allAnswers = await ActivityAnswer.findAll({
+      where: {
+        activity_question_id: allQuestions.map((q) => q.id),
+        user_id: answer.user_id,
+      },
+    });
+    const allAnswersApproved =
+      allAnswers.length === allQuestions.length &&
+      allAnswers.every((a) => a.status === "approved");
+
+    if (!allAnswersApproved || !activity) {
+      res.json(answer);
+      return;
+    }
+
+    // Verificar que el entry también esté aprobado
+    const entry = await ActivityEntry.findOne({
+      where: {
+        user_id: answer.user_id,
+        activity_id: question.activity_id,
+        status: "approved",
+      },
+    });
+    if (!entry) {
+      res.json(answer);
+      return;
+    }
+
+    // Verificar que no se hayan otorgado los puntos ya
+    const alreadyAwarded = await PointHistory.findOne({
+      where: {
+        user_id: answer.user_id,
+        description: `Actividad aprobada: ${activityName}`,
+      },
+    });
+    if (alreadyAwarded) {
+      res.json(answer);
+      return;
+    }
+
+    const user = await User.findByPk(answer.user_id);
+    if (user) {
+      await user.update({ points: user.points + activity.points_reward });
+      await PointHistory.create({
+        user_id: user.id,
+        points: activity.points_reward,
+        action: "earned",
+        description: `Actividad aprobada: ${activityName}`,
+        assigned_by: req.user!.id,
+      });
+      await createNotification(
+        user.id,
+        `¡Ganaste ${activity.points_reward} puntos por "${activityName}"! Todas tus respuestas fueron aprobadas.`,
+        "success",
+      );
+    }
+
+    res.json(answer);
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
   }
