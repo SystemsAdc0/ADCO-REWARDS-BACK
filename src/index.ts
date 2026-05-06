@@ -24,7 +24,6 @@ import agreements from "./routes/agreements";
 import pointRequests from "./routes/pointRequests";
 import childrenDay from "./routes/childrenDay";
 import duelComments from "./routes/duelComments";
-import { sendNotification } from "./config/autoQuerys";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -84,7 +83,7 @@ app.use(
 
 // Swagger docs
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-sendNotification()
+
 // API Routes
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/users", userRoutes);
