@@ -8,7 +8,7 @@ import {
   Redemption,
 } from "../models";
 import { createNotification } from "../services/notificationService";
-import { Sequelize, Op, where } from "sequelize";
+import { Sequelize, Op } from "sequelize";
 import SocialMedia from "../models/SocialMedia";
 import { deleteActivityEntryFile } from "./googleCloudController";
 import ActivityQuestion from "../models/ActivityQuestion";
@@ -316,7 +316,11 @@ export const updateActivity = async (
     const updated = await Activity.findByPk(activity.id, {
       include: [
         { model: SocialMedia, as: "social_medias", attributes: ["name"] },
-        { model: ActivityQuestion, as: "questions", attributes: ["id", "question"] },
+        {
+          model: ActivityQuestion,
+          as: "questions",
+          attributes: ["id", "question"],
+        },
       ],
     });
 
@@ -640,9 +644,19 @@ export const reviewEntry = async (
         where: {
           user_id: entry.user_id,
           description: `Actividad aprobada: ${activity?.name}`,
+          action: "earned",
         },
       });
-      if (!alreadyAwarded && activity) {
+      const alreadyReverted = await PointHistory.findOne({
+        where: {
+          user_id: entry.user_id,
+          description: `Actividad revertida: ${activity.name}`,
+          action: "reverted",
+        },
+      });
+
+      const canAward = !alreadyAwarded || (alreadyAwarded && alreadyReverted);
+      if (allAnswersApproved && activity && canAward) {
         const user = await User.findByPk(entry.user_id);
         if (user) {
           await user.update({ points: user.points + activity.points_reward });
@@ -779,14 +793,24 @@ export const reviewAnswer = async (
       return;
     }
 
-    // Verificar que no se hayan otorgado los puntos ya
+    // Verificar que no se hayan otorgado los puntos ya 
     const alreadyAwarded = await PointHistory.findOne({
       where: {
         user_id: answer.user_id,
         description: `Actividad aprobada: ${activityName}`,
+        action: "earned",
       },
     });
-    if (alreadyAwarded) {
+
+    const alreadyReverted = await PointHistory.findOne({
+      where: {
+        user_id: answer.user_id,
+        description: `Actividad revertida: ${activityName}`,
+        action: "reverted",
+      },
+    });
+
+    if (alreadyAwarded && !alreadyReverted) {
       res.json(answer);
       return;
     }
@@ -809,6 +833,136 @@ export const reviewAnswer = async (
     }
 
     res.json(answer);
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const revertEntry = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { activity_id, user_id, id, review_notes } = req.body;
+    const activity = await Activity.findByPk(activity_id);
+    const user = await User.findByPk(user_id);
+    const entry = await ActivityEntry.findByPk(id);
+
+    if (!activity) {
+      res.status(404).json({ message: "Actividad no encontrada" });
+      return;
+    }
+
+    if (!user) {
+      res.status(404).json({ message: "Usuario no encontrado" });
+      return;
+    }
+
+    if (!entry || entry?.status !== "approved") {
+      res.status(400).json({
+        message:
+          "No se puede revertir una participación que no este aprobada o no existe",
+      });
+      return;
+    }
+
+    if (!review_notes || String(review_notes).trim() === "") {
+      res.status(400).json({ message: "La razon de revertir es obligatoria" });
+      return;
+    }
+
+    const userActivityHistory = await PointHistory.findOne({
+      where: {
+        user_id: entry.user_id,
+        description: `Actividad aprobada: ${activity?.name}`,
+        action: "earned",
+      },
+    });
+
+    if (!userActivityHistory) {
+      res.status(404).json({
+        message:
+          "No se puede revertir porque la participación no fue previamente aprobada",
+      });
+      return;
+    }
+
+    const allQuestions = await ActivityQuestion.findAll({
+      where: {
+        activity_id: activity.id,
+      },
+      attributes: ["id"],
+    });
+
+    const t = await sequelize.transaction();
+
+    try {
+      if (allQuestions.length > 0) {
+        // Rechazar respuestas si la actividad tiene preguntas
+        await ActivityAnswer.destroy(
+          {
+            where: {
+              activity_question_id: { [Op.in]: allQuestions.map((q) => q.id) },
+              user_id: user.id,
+            },
+            transaction: t,
+          },
+        );
+      }
+
+      // Quitar puntos del usuario
+      await user.decrement("points", {
+        by: activity.points_reward,
+        transaction: t,
+      });
+
+      // Actualizar la participación del usuario para rechazarlo
+      await ActivityEntry.update(
+        {
+          status: "rejected",
+          reviewed_by: req.user!.id,
+          review_notes: review_notes,
+        },
+        {
+          where: {
+            id: id,
+          },
+          transaction: t,
+        },
+      );
+
+      // Crear historial de la reversión
+      await PointHistory.create(
+        {
+          user_id: user.id,
+          points: -activity.points_reward,
+          action: "reverted",
+          description: `Actividad revertida: ${activity.name}`,
+          assigned_by: req.user!.id,
+        },
+        { transaction: t },
+      );
+
+      await t.commit();
+    } catch (error) {
+      await t.rollback();
+      throw error;
+    }
+
+    // Borrar archivo
+    if (entry.file) await deleteActivityEntryFile(entry.file);
+
+    // Crear notificación
+    await createNotification(
+      user.id,
+      `¡Perdiste ${activity.points_reward} puntos por "${activity.name}"! Favor de volver a ver la actividad.`,
+      "warning",
+    );
+
+    res.status(200).json({
+      message: "Participación revertida",
+    });
+    return;
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
   }
