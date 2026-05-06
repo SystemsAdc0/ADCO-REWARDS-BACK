@@ -180,6 +180,10 @@ export const joinActivity = async (
     });
 
     if (activityExist?.dataValues) {
+      if (activityExist.status === "approved") {
+        res.status(409).json({ message: "Ya tienes una participacion aprobada en esta actividad" });
+        return;
+      }
       await ActivityEntry.update(
         {
           status: "pending",
@@ -281,6 +285,20 @@ export const reviewEntry = async (
     }
 
     const { status, review_notes } = req.body;
+
+    if (status === "approved") {
+      const alreadyApproved = await ActivityEntry.findOne({
+        where: {
+          user_id: entry.user_id,
+          activity_id: entry.activity_id,
+          status: "approved",
+        },
+      });
+      if (alreadyApproved) {
+        res.status(409).json({ message: "El usuario ya tiene una participacion aprobada en esta actividad" });
+        return;
+      }
+    }
 
     // La razon de rechazo es obligatoria
     if (status === "rejected") {
