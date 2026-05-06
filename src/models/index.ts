@@ -13,6 +13,7 @@ import ChildrenDay from "./ChildrenDay";
 import ChildrenDayVotes from "./ChildrenDayVote";
 import ActivityQuestion from "./ActivityQuestion";
 import ActivityAnswer from "./ActivityAnswer";
+import DuelComment from "./DuelComment";
 // User associations
 User.hasMany(Redemption, { foreignKey: "user_id", as: "redemptions" });
 User.hasMany(PointHistory, { foreignKey: "user_id", as: "pointHistory" });
@@ -116,6 +117,11 @@ ChildrenDayVotes.belongsTo(ChildrenDay, {
   foreignKey: "children_day_id",
   as: "children_day",
 });
+
+// DuelComment associations
+DuelComment.belongsTo(User, { foreignKey: "user_id", as: "user" });
+User.hasMany(DuelComment, { foreignKey: "user_id", as: "duelComments" });
+
 export {
   User,
   Prize,
