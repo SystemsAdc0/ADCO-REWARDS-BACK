@@ -1,6 +1,6 @@
 import { Request } from "express";
 
-export type UserRole = "admin" | "moderator" | "user" | "visitor";
+export type UserRole = "admin" | "moderator" | "user" | "visitor" | "developer";
 
 export interface JwtPayload {
   id: number;

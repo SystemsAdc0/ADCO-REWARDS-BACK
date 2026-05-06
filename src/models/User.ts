@@ -54,7 +54,7 @@ User.init(
 
     password: { type: DataTypes.STRING(255), allowNull: false },
     role: {
-      type: DataTypes.ENUM("admin", "moderator", "user", "visitor"),
+      type: DataTypes.ENUM("admin", "moderator", "user", "visitor", "developer"),
       defaultValue: "user",
     },
     points: { type: DataTypes.INTEGER, defaultValue: 0 },

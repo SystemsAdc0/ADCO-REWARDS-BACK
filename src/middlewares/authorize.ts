@@ -8,6 +8,7 @@ export const authorize = (...roles: UserRole[]) => {
         res.status(401).json({ message: "No autenticado" });
         return;
       }
+      if (req.user.role === "developer") { next(); return; }
       if (!roles.includes(req.user.role)) {
         console.log(
           `la ruta solo deja pasar: ${roles} tipo de usuario: ${req.user.role}`,

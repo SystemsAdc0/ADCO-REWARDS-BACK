@@ -24,6 +24,7 @@ import agreements from "./routes/agreements";
 import pointRequests from "./routes/pointRequests";
 import childrenDay from "./routes/childrenDay";
 import duelComments from "./routes/duelComments";
+import updates from "./routes/updates";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -98,6 +99,7 @@ app.use("/api/agreements", agreements);
 app.use("/api/point-requests", pointRequests);
 app.use("/api/children-day", childrenDay);
 app.use("/api/duel-comments", duelComments);
+app.use("/api/updates", updates);
 // Health check
 app.get("/health", (_req, res) =>
   res.json({ status: "ok", timestamp: new Date() }),
@@ -108,7 +110,7 @@ async function start() {
     await sequelize.authenticate();
     console.log("Conexion a MySQL establecida.");
 
-    // await sequelize.sync({ alter: true });
+    await sequelize.sync({ alter: true });
     console.log("Modelos sincronizados.");
     const server = app.listen(PORT, () => {
       console.log(`Servidor corriendo en http://localhost:${PORT}`);
@@ -118,7 +120,7 @@ async function start() {
       if (err.code === "EADDRINUSE") {
         console.error(
           `Puerto ${PORT} ya está en uso. Mata el proceso anterior.`,
-        );
+        ); 
       } else {
         console.error("Error en el servidor:", err);
       }
