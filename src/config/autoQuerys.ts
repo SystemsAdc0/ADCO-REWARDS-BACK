@@ -12,14 +12,14 @@ export const sendNotification = async () => {
 
     console.log(users);
 
-    // for (let u of users) {
-    //   await createNotification(
-    //     u.user_id,
-    //     `Actualización del ranking: ahora puedes comentar en las batallas para apoyar a tu compañero favorito.`,
-    //     "info",
-    //     "success",
-    //   );
-    // }
+    for (let u of users) {
+      await createNotification(
+        u.user_id,
+        `Actualización del ranking: ahora puedes comentar en las batallas para apoyar a tu compañero favorito.`,
+        "info",
+        "success",
+      );
+    }
   } catch (error) {
     console.error("Error registering points:", error);
   }

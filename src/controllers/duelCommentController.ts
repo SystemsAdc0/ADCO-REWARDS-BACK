@@ -2,20 +2,39 @@ import { Response } from "express";
 import { AuthRequest } from "../types";
 import DuelComment from "../models/DuelComment";
 import { User } from "../models";
+import { createNotification } from "../services/notificationService";
+import { Op } from "sequelize";
+
+const VS_THRESHOLD = 500;
+const EXCLUDED_IDS = [20, 43];
 
 export const getComments = async (
   _req: AuthRequest,
   res: Response,
 ): Promise<void> => {
   try {
+    const top2 = await User.findAll({
+      where: {
+        role: { [Op.in]: ["user", "moderator"] },
+        status: "active",
+        id: { [Op.notIn]: EXCLUDED_IDS },
+      },
+      attributes: ["id", "points"],
+      order: [["points", "DESC"]],
+      limit: 2,
+    });
+
+    const duelActive =
+      top2.length === 2 && top2[0].points - top2[1].points <= VS_THRESHOLD;
+
+    if (!duelActive) {
+      await DuelComment.destroy({ where: {} });
+      res.json([]);
+      return;
+    }
+
     const comments = await DuelComment.findAll({
-      include: [
-        {
-          model: User,
-          as: "user",
-          attributes: ["id", "name", "avatar"],
-        },
-      ],
+      include: [{ model: User, as: "user", attributes: ["id", "name", "avatar"] }],
       order: [["created_at", "ASC"]],
     });
     res.json(comments);
@@ -41,6 +60,32 @@ export const createComment = async (
     const full = await DuelComment.findByPk(comment.id, {
       include: [{ model: User, as: "user", attributes: ["id", "name", "avatar"] }],
     });
+
+    // Notificar a los duelistas solo si hay duelo activo (diferencia ≤ VS_THRESHOLD)
+    const top2 = await User.findAll({
+      where: {
+        role: { [Op.in]: ["user", "moderator"] },
+        status: "active",
+        id: { [Op.notIn]: EXCLUDED_IDS },
+      },
+      attributes: ["id", "points"],
+      order: [["points", "DESC"]],
+      limit: 2,
+    });
+
+    if (
+      top2.length === 2 &&
+      top2[0].points - top2[1].points <= VS_THRESHOLD
+    ) {
+      const commenterName = (full as any)?.user?.name ?? "Alguien";
+      const msg = `💬 ${commenterName} comentó en el duelo por el 1er lugar`;
+      for (const duelista of top2) {
+        if (duelista.id !== req.user!.id) {
+          await createNotification(duelista.id, msg, "info");
+        }
+      }
+    }
+
     res.status(201).json(full);
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
