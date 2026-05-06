@@ -9,6 +9,8 @@ import {
   getEntries,
   reviewEntry,
   getActivitiesPublic,
+  updateAnswer,
+  reviewAnswer,
 } from "../controllers/activityController";
 import { authenticate } from "../middlewares/authenticate";
 import { authorize } from "../middlewares/authorize";
@@ -18,6 +20,7 @@ import { authActivity } from "../middlewares/authActivity";
 const router = Router();
 
 router.get("/public", getActivitiesPublic);
+router.get("/private/admin", authenticate, authorize("admin"), getActivities);
 router.get(
   "/private",
   authenticate,
@@ -27,7 +30,12 @@ router.get(
 
 router.post("/", authenticate, authorize("admin"), createActivity);
 router.put("/:id", authenticate, authorize("admin"), updateActivity);
-router.patch("/:id/toggle", authenticate, authorize("admin"), toggleActivityStatus);
+router.patch(
+  "/:id/toggle",
+  authenticate,
+  authorize("admin"),
+  toggleActivityStatus,
+);
 router.delete("/:id", authenticate, authorize("admin"), deleteActivity);
 router.post(
   "/:id/join",
@@ -35,6 +43,18 @@ router.post(
   authorize("user", "moderator"),
   authActivity,
   joinActivity,
+);
+router.put(
+  "/answers/:id",
+  authenticate,
+  authorize("user", "moderator"),
+  updateAnswer,
+);
+router.put(
+  "/answers/:id/review",
+  authenticate,
+  authorize("admin", "moderator"),
+  reviewAnswer,
 );
 router.get(
   "/entries",

@@ -1,12 +1,6 @@
 import { Request, Response } from "express";
 import { AuthRequest } from "../types";
-import {
-  Activity,
-  ActivityEntry,
-  User,
-  PointHistory,
-  Redemption,
-} from "../models";
+import { Activity, ActivityEntry, User, PointHistory } from "../models";
 import { createNotification } from "../services/notificationService";
 import { Sequelize, Op, where } from "sequelize";
 import SocialMedia from "../models/SocialMedia";
@@ -181,7 +175,11 @@ export const joinActivity = async (
 
     if (activityExist?.dataValues) {
       if (activityExist.status === "approved") {
-        res.status(409).json({ message: "Ya tienes una participacion aprobada en esta actividad" });
+        res
+          .status(409)
+          .json({
+            message: "Ya tienes una participacion aprobada en esta actividad",
+          });
         return;
       }
       await ActivityEntry.update(
@@ -295,7 +293,12 @@ export const reviewEntry = async (
         },
       });
       if (alreadyApproved) {
-        res.status(409).json({ message: "El usuario ya tiene una participacion aprobada en esta actividad" });
+        res
+          .status(409)
+          .json({
+            message:
+              "El usuario ya tiene una participacion aprobada en esta actividad",
+          });
         return;
       }
     }

@@ -11,6 +11,7 @@ interface ActivityAttributes {
   end_date: Date;
   time_zone: string;
   status: ActivityStatus;
+  questions?: string[];
   category: string;
   image: string;
   counts_for_travel: boolean;
@@ -64,7 +65,7 @@ Activity.init(
       defaultValue: "America/Tijuana",
     },
     status: {
-      type: DataTypes.ENUM("active", "inactive", "finished"), 
+      type: DataTypes.ENUM("active", "inactive", "finished"),
       defaultValue: "active",
     },
     counts_for_travel: {
