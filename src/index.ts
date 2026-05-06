@@ -80,6 +80,7 @@ app.use(
   express.static(path.join(process.cwd(), process.env.UPLOAD_DIR || "uploads")),
 );
 
+
 // Swagger docs
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
