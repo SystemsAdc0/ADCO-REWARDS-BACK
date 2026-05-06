@@ -1,38 +1,45 @@
-import { DataTypes, Model, Optional } from 'sequelize';
-import sequelize from '../config/database';
+import { DataTypes, Model, Optional } from "sequelize";
+import sequelize from "../config/database";
 
 interface PointHistoryAttributes {
   id: number;
   user_id: number;
   points: number;
-  action: 'earned' | 'spent' | 'adjusted';
+  action: "earned" | "spent" | "adjusted" | "reverted";
   description: string;
   assigned_by?: number;
   created_at?: Date;
 }
 
-interface PointHistoryCreationAttributes extends Optional<PointHistoryAttributes, 'id' | 'assigned_by'> {}
+interface PointHistoryCreationAttributes extends Optional<
+  PointHistoryAttributes,
+  "id" | "assigned_by"
+> {}
 
 class PointHistory
   extends Model<PointHistoryAttributes, PointHistoryCreationAttributes>
   implements PointHistoryAttributes
 {
   public id!: number;
-  public user_id!: number; 
+  public user_id!: number;
   public points!: number;
-  public action!: 'earned' | 'spent' | 'adjusted';
+  public action!: "earned" | "spent" | "adjusted" | "reverted";
   public description!: string;
   public assigned_by?: number;
   public readonly created_at!: Date;
 }
- 
+
 PointHistory.init(
   {
-    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     user_id: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
     points: { type: DataTypes.INTEGER, allowNull: false },
     action: {
-      type: DataTypes.ENUM('earned', 'spent', 'adjusted'),
+      type: DataTypes.ENUM("earned", "spent", "adjusted", "reverted"),
       allowNull: false,
     },
     description: { type: DataTypes.STRING(255), allowNull: false },
@@ -40,11 +47,11 @@ PointHistory.init(
   },
   {
     sequelize,
-    tableName: 'point_history',
+    tableName: "point_history",
     timestamps: true,
-    createdAt: 'created_at',
+    createdAt: "created_at",
     updatedAt: false,
-  }
+  },
 );
 
 export default PointHistory;

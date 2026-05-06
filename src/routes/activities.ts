@@ -11,6 +11,7 @@ import {
   getActivitiesPublic,
   updateAnswer,
   reviewAnswer,
+  revertEntry,
 } from "../controllers/activityController";
 import { authenticate } from "../middlewares/authenticate";
 import { authorize } from "../middlewares/authorize";
@@ -68,5 +69,6 @@ router.put(
   authorize("admin", "moderator"),
   reviewEntry,
 );
+router.put("/entries/revert", authenticate, authorize("admin"), revertEntry)
 
 export default router;
