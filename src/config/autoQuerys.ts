@@ -10,8 +10,6 @@ export const sendNotification = async () => {
       raw: true,
     });
 
-    console.log(users);
-
     for (let u of users) {
       await createNotification(
         u.user_id,
