@@ -22,7 +22,6 @@ import reportRoutes from "./routes/reports";
 import googleFiles from "./routes/googleCloud";
 import agreements from "./routes/agreements";
 import pointRequests from "./routes/pointRequests";
-import childrenDay from "./routes/childrenDay";
 import duelComments from "./routes/duelComments";
 import updates from "./routes/updates";
 
@@ -97,7 +96,6 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/agreements", agreements);
 app.use("/api/point-requests", pointRequests);
-app.use("/api/children-day", childrenDay);
 app.use("/api/duel-comments", duelComments);
 app.use("/api/updates", updates);
 // Health check

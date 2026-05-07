@@ -9,8 +9,6 @@ import SocialMedia from "./SocialMedia";
 import Agreement from "./Agreement";
 import AgreementImage from "./AgreementImage";
 import PointRequest from "./PointRequest";
-import ChildrenDay from "./ChildrenDay";
-import ChildrenDayVotes from "./ChildrenDayVote";
 import ActivityQuestion from "./ActivityQuestion";
 import ActivityAnswer from "./ActivityAnswer";
 import DuelComment from "./DuelComment";
@@ -96,29 +94,6 @@ ActivityAnswer.belongsTo(ActivityQuestion, {
 });
 ActivityAnswer.belongsTo(User, { foreignKey: "user_id", as: "user" });
 
-//chidren day
-ChildrenDay.belongsTo(User, {
-  foreignKey: "user_id",
-  as: "user",
-});
-ChildrenDay.hasMany(ChildrenDayVotes, {
-  foreignKey: "children_day_id",
-  as: "votes",
-});
-// ChildrenDay.hasMany(ChildrenDayVotes, {
-//   foreignKey: "children_day_id",
-//   as: "votesCount",
-// });
-ChildrenDayVotes.belongsTo(User, {
-  foreignKey: "user_id",
-  as: "user",
-});
-//children day votes
-ChildrenDayVotes.belongsTo(ChildrenDay, {
-  foreignKey: "children_day_id",
-  as: "children_day",
-});
-
 // DuelComment associations
 DuelComment.belongsTo(User, { foreignKey: "user_id", as: "user" });
 User.hasMany(DuelComment, { foreignKey: "user_id", as: "duelComments" });
@@ -138,6 +113,4 @@ export {
   Agreement,
   AgreementImage,
   PointRequest,
-  ChildrenDay,
-  ChildrenDayVotes,
 };
