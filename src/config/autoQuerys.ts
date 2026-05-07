@@ -1,23 +1,23 @@
 import { col, fn, literal } from "sequelize";
-import { ActivityEntry, ChildrenDay, ChildrenDayVotes, User } from "../models";
+import { ActivityEntry, User } from "../models";
 import { ActivityEntryStatus } from "../types";
 import { createNotification } from "../services/notificationService";
 
 export const sendNotification = async () => {
   try {
-    const users = await ChildrenDay.findAll({
-      attributes: ["user_id"],
-      raw: true,
-    });
+    // const users = await ChildrenDay.findAll({
+    //   attributes: ["user_id"],
+    //   raw: true,
+    // });
 
-    for (let u of users) {
-      await createNotification(
-        u.user_id,
-        `Actualización del ranking: ahora puedes comentar en las batallas para apoyar a tu compañero favorito.`,
-        "info",
-        "success",
-      );
-    }
+    // for (let u of users) {
+    //   await createNotification(
+    //     u.user_id,
+    //     `Actualización del ranking: ahora puedes comentar en las batallas para apoyar a tu compañero favorito.`,
+    //     "info",
+    //     "success",
+    //   );
+    // }
   } catch (error) {
     console.error("Error registering points:", error);
   }
