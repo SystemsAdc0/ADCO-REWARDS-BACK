@@ -16,6 +16,15 @@ export const getUserAnswers = async (
 
     if (req.user?.role === "user") where.user_id = req.user.id;
 
+    // Filter by exam_id: fetch question IDs belonging to the exam first
+    if (req.query.exam_id) {
+      const questions = await CourseModuleSectionQuestion.findAll({
+        where: { course_module_section_exam_id: Number(req.query.exam_id) },
+        attributes: ["id"],
+      });
+      where.question_id = questions.map((q) => q.id);
+    }
+
     const userAnswers = await CourseModuleSectionQuestionUserAnswer.findAll({
       where,
       include: [
@@ -80,14 +89,17 @@ export const submitUserAnswer = async (
       status = correctAnswer?.is_correct ? "auto_approved" : "pending";
     }
 
-    const created = await CourseModuleSectionQuestionUserAnswer.create({
-      user_id: req.user!.id,
-      question_id,
-      answer_text,
-      answer_option_id,
-      status,
-    });
-    res.status(201).json(created);
+    const [record, created] =
+      await CourseModuleSectionQuestionUserAnswer.findOrCreate({
+        where: { user_id: req.user!.id, question_id },
+        defaults: { user_id: req.user!.id, question_id, answer_text, answer_option_id, status },
+      });
+
+    if (!created) {
+      await record.update({ answer_text, answer_option_id, status });
+    }
+
+    res.status(created ? 201 : 200).json(record);
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
   }

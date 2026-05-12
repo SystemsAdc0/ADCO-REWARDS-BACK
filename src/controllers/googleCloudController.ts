@@ -167,6 +167,65 @@ export const getActivityFile = async (req: AuthRequest, res: Response) => {
   res.json({ url });
 };
 
+export const courseImageUpload = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ message: "No se recibió imagen" });
+      return;
+    }
+    const webpBuffer = await sharp(req.file.buffer)
+      .webp({ quality: 82 })
+      .toBuffer();
+    const objectName = `courses/${Date.now()}-${crypto.randomUUID()}.webp`;
+    const gcsFile = bucketPublic.file(objectName);
+    await gcsFile.save(webpBuffer, {
+      contentType: "image/webp",
+      resumable: false,
+    });
+    const publicUrl = `https://storage.googleapis.com/${bucketPublic.name}/${objectName}`;
+    res.json({ objectName, publicUrl });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error procesando imagen" });
+  }
+};
+
+export const courseContentSignedUpload = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { filename, contentType } = req.body;
+    if (!filename) {
+      res.status(400).json({ message: "filename es requerido" });
+      return;
+    }
+    const ext = filename.split(".").pop()?.toLowerCase() || "bin";
+    const objectName = `courses/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const resolvedContentType =
+      contentType && contentType.trim() !== ""
+        ? contentType
+        : "application/octet-stream";
+    const isVideo = resolvedContentType.startsWith("video/");
+    const expiryMs = isVideo ? 60 * 60 * 1000 : 10 * 60 * 1000;
+    const file = bucketPublic.file(objectName);
+    const [url] = await file.getSignedUrl({
+      version: "v4",
+      action: "write",
+      expires: Date.now() + expiryMs,
+      contentType: resolvedContentType,
+    });
+    const publicUrl = `https://storage.googleapis.com/${bucketPublic.name}/${objectName}`;
+    res.json({ url, objectName, publicUrl, contentType: resolvedContentType });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error generando signed upload URL" });
+  }
+};
+
 /**
  * Elimina un archivo de activity_entries del bucket privado.
  * Se usa al rechazar una participación para liberar espacio y permitir re-envío.

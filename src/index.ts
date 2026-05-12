@@ -37,6 +37,8 @@ import courseExamRoutes from "./routes/courses/courseModuleSectionExams";
 import courseQuestionRoutes from "./routes/courses/courseModuleSectionQuestions";
 import courseAnswerRoutes from "./routes/courses/courseModuleSectionAnswers";
 import courseUserAnswerRoutes from "./routes/courses/courseModuleSectionUserAnswers";
+import courseProgressRoutes from "./routes/courses/courseProgress";
+import courseAssignmentRoutes from "./routes/courses/courseAssignments";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -112,9 +114,8 @@ app.use("/api/point-requests", pointRequests);
 app.use("/api/duel-comments", duelComments);
 app.use("/api/updates", updates);
 
-// Courses routes
+// Courses routes — rutas específicas primero, genérica (/api/courses) al final
 app.use("/api/courses/departments", departmentRoutes);
-app.use("/api/courses", courseRoutes);
 app.use("/api/courses/modules", courseModuleRoutes);
 app.use("/api/courses/sections", courseSectionRoutes);
 app.use("/api/courses/links", courseLinkRoutes);
@@ -124,6 +125,9 @@ app.use("/api/courses/exams", courseExamRoutes);
 app.use("/api/courses/questions", courseQuestionRoutes);
 app.use("/api/courses/answers", courseAnswerRoutes);
 app.use("/api/courses/user-answers", courseUserAnswerRoutes);
+app.use("/api/courses/progress", courseProgressRoutes);
+app.use("/api/courses/assignments", courseAssignmentRoutes);
+app.use("/api/courses", courseRoutes);
 // Health check
 app.get("/health", (_req, res) =>
   res.json({ status: "ok", timestamp: new Date() }),

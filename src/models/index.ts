@@ -26,6 +26,8 @@ import CourseModuleSectionExam from "./courses/CourseModuleSectionExam";
 import CourseModuleSectionQuestion from "./courses/CourseModuleSectionQuestion";
 import CourseModuleSectionAnswer from "./courses/CourseModuleSectionAnswer";
 import CourseModuleSectionQuestionUserAnswer from "./courses/CourseModuleSectionQuestionUserAnswer";
+import UserCourseProgress from "./courses/UserCourseProgress";
+import UserCourseAssignment from "./courses/UserCourseAssignment";
 // User associations
 User.hasMany(Redemption, { foreignKey: "user_id", as: "redemptions" });
 User.hasMany(PointHistory, { foreignKey: "user_id", as: "pointHistory" });
@@ -239,6 +241,37 @@ CourseModuleSectionQuestionUserAnswer.belongsTo(User, {
   as: "user",
 });
 
+// User ↔ UserCourseAssignment
+User.hasMany(UserCourseAssignment, {
+  foreignKey: "user_id",
+  as: "courseAssignments",
+});
+UserCourseAssignment.belongsTo(User, { foreignKey: "user_id", as: "user" });
+
+// Course ↔ UserCourseAssignment
+Course.hasMany(UserCourseAssignment, {
+  foreignKey: "course_id",
+  as: "userAssignments",
+});
+UserCourseAssignment.belongsTo(Course, { foreignKey: "course_id", as: "course" });
+
+// User → UserCourseProgress
+User.hasMany(UserCourseProgress, {
+  foreignKey: "user_id",
+  as: "courseProgress",
+});
+UserCourseProgress.belongsTo(User, { foreignKey: "user_id", as: "user" });
+
+// CourseModuleSection → UserCourseProgress
+CourseModuleSection.hasMany(UserCourseProgress, {
+  foreignKey: "course_module_section_id",
+  as: "userProgress",
+});
+UserCourseProgress.belongsTo(CourseModuleSection, {
+  foreignKey: "course_module_section_id",
+  as: "section",
+});
+
 export {
   User,
   Prize,
@@ -262,4 +295,6 @@ export {
   CourseModuleSectionQuestion,
   CourseModuleSectionAnswer,
   CourseModuleSectionQuestionUserAnswer,
+  UserCourseProgress,
+  UserCourseAssignment,
 };
