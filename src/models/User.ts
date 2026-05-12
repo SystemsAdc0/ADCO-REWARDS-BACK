@@ -1,6 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/database";
-import { UserRole, UserStatus } from "../types";
+import { UserRole, UserStatus, UserType } from "../types";
 
 interface UserAttributes {
   id: number;
@@ -14,13 +14,23 @@ interface UserAttributes {
   can_request_points?: boolean;
   birth_date?: string;
   company?: string;
+  department_id?: number;
+  type?: UserType;
   created_at?: Date;
   updated_at?: Date;
 }
 
 interface UserCreationAttributes extends Optional<
   UserAttributes,
-  "id" | "points" | "status" | "avatar" | "can_request_points" | "birth_date" | "company"
+  | "id"
+  | "points"
+  | "status"
+  | "avatar"
+  | "can_request_points"
+  | "birth_date"
+  | "company"
+  | "department_id"
+  | "type"
 > {}
 
 class User
@@ -38,6 +48,8 @@ class User
   public can_request_points?: boolean;
   public birth_date?: string;
   public company?: string;
+  public department_id?: number;
+  public type?: UserType;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -51,7 +63,6 @@ User.init(
     },
     name: { type: DataTypes.STRING(100), allowNull: false },
     email: { type: DataTypes.STRING(150), allowNull: false, unique: true },
-
     password: { type: DataTypes.STRING(255), allowNull: false },
     role: {
       type: DataTypes.ENUM("admin", "moderator", "user", "visitor", "developer"),
@@ -66,6 +77,12 @@ User.init(
     can_request_points: { type: DataTypes.BOOLEAN, defaultValue: false },
     birth_date: { type: DataTypes.DATEONLY, allowNull: true },
     company: { type: DataTypes.STRING(100), allowNull: true },
+    department_id: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
+    type: {
+      type: DataTypes.ENUM("administrative", "operative"),
+      defaultValue: "administrative",
+      allowNull: true,
+    },
   },
   {
     sequelize,

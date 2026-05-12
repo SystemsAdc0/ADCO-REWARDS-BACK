@@ -25,6 +25,19 @@ import pointRequests from "./routes/pointRequests";
 import duelComments from "./routes/duelComments";
 import updates from "./routes/updates";
 
+// Courses
+import departmentRoutes from "./routes/courses/departments";
+import courseRoutes from "./routes/courses/courses";
+import courseModuleRoutes from "./routes/courses/courseModules";
+import courseSectionRoutes from "./routes/courses/courseModuleSections";
+import courseLinkRoutes from "./routes/courses/courseModuleSectionLinks";
+import courseActivityRoutes from "./routes/courses/courseModuleSectionActivities";
+import courseEvidenceRoutes from "./routes/courses/courseModuleSectionEvidence";
+import courseExamRoutes from "./routes/courses/courseModuleSectionExams";
+import courseQuestionRoutes from "./routes/courses/courseModuleSectionQuestions";
+import courseAnswerRoutes from "./routes/courses/courseModuleSectionAnswers";
+import courseUserAnswerRoutes from "./routes/courses/courseModuleSectionUserAnswers";
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 // Rate limiters
@@ -98,6 +111,19 @@ app.use("/api/agreements", agreements);
 app.use("/api/point-requests", pointRequests);
 app.use("/api/duel-comments", duelComments);
 app.use("/api/updates", updates);
+
+// Courses routes
+app.use("/api/courses/departments", departmentRoutes);
+app.use("/api/courses", courseRoutes);
+app.use("/api/courses/modules", courseModuleRoutes);
+app.use("/api/courses/sections", courseSectionRoutes);
+app.use("/api/courses/links", courseLinkRoutes);
+app.use("/api/courses/activities", courseActivityRoutes);
+app.use("/api/courses/evidence", courseEvidenceRoutes);
+app.use("/api/courses/exams", courseExamRoutes);
+app.use("/api/courses/questions", courseQuestionRoutes);
+app.use("/api/courses/answers", courseAnswerRoutes);
+app.use("/api/courses/user-answers", courseUserAnswerRoutes);
 // Health check
 app.get("/health", (_req, res) =>
   res.json({ status: "ok", timestamp: new Date() }),

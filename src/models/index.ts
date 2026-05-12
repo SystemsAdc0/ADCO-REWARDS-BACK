@@ -13,6 +13,19 @@ import ActivityQuestion from "./ActivityQuestion";
 import ActivityAnswer from "./ActivityAnswer";
 import DuelComment from "./DuelComment";
 import PlatformUpdate from "./PlatformUpdate";
+
+// Courses
+import Department from "./courses/Department";
+import Course from "./courses/Course";
+import CourseModule from "./courses/CourseModule";
+import CourseModuleSection from "./courses/CourseModuleSection";
+import CourseModuleSectionLink from "./courses/CourseModuleSectionLink";
+import CourseModuleSectionActivity from "./courses/CourseModuleSectionActivity";
+import CourseModuleSectionEvidence from "./courses/CourseModuleSectionEvidence";
+import CourseModuleSectionExam from "./courses/CourseModuleSectionExam";
+import CourseModuleSectionQuestion from "./courses/CourseModuleSectionQuestion";
+import CourseModuleSectionAnswer from "./courses/CourseModuleSectionAnswer";
+import CourseModuleSectionQuestionUserAnswer from "./courses/CourseModuleSectionQuestionUserAnswer";
 // User associations
 User.hasMany(Redemption, { foreignKey: "user_id", as: "redemptions" });
 User.hasMany(PointHistory, { foreignKey: "user_id", as: "pointHistory" });
@@ -102,6 +115,130 @@ User.hasMany(DuelComment, { foreignKey: "user_id", as: "duelComments" });
 PlatformUpdate.belongsTo(User, { foreignKey: "sent_by", as: "sender" });
 User.hasMany(PlatformUpdate, { foreignKey: "sent_by", as: "platformUpdates" });
 
+// ── Courses associations ─────────────────────────────────────────────────────
+
+// Department ↔ User
+Department.hasMany(User, { foreignKey: "department_id", as: "users" });
+User.belongsTo(Department, { foreignKey: "department_id", as: "department" });
+
+// Department → Course
+Department.hasMany(Course, { foreignKey: "department_id", as: "courses" });
+Course.belongsTo(Department, { foreignKey: "department_id", as: "department" });
+
+// Course → CourseModule
+Course.hasMany(CourseModule, { foreignKey: "course_id", as: "modules" });
+CourseModule.belongsTo(Course, { foreignKey: "course_id", as: "course" });
+
+// CourseModule → CourseModuleSection
+CourseModule.hasMany(CourseModuleSection, {
+  foreignKey: "course_module_id",
+  as: "sections",
+});
+CourseModuleSection.belongsTo(CourseModule, {
+  foreignKey: "course_module_id",
+  as: "module",
+});
+
+// CourseModuleSection → CourseModuleSectionLink
+CourseModuleSection.hasMany(CourseModuleSectionLink, {
+  foreignKey: "course_module_section_id",
+  as: "links",
+});
+CourseModuleSectionLink.belongsTo(CourseModuleSection, {
+  foreignKey: "course_module_section_id",
+  as: "section",
+});
+
+// CourseModuleSection → CourseModuleSectionActivity
+CourseModuleSection.hasMany(CourseModuleSectionActivity, {
+  foreignKey: "course_module_section_id",
+  as: "activities",
+});
+CourseModuleSectionActivity.belongsTo(CourseModuleSection, {
+  foreignKey: "course_module_section_id",
+  as: "section",
+});
+
+// CourseModuleSectionActivity → CourseModuleSectionEvidence
+CourseModuleSectionActivity.hasMany(CourseModuleSectionEvidence, {
+  foreignKey: "course_module_section_activity_id",
+  as: "evidence",
+});
+CourseModuleSectionEvidence.belongsTo(CourseModuleSectionActivity, {
+  foreignKey: "course_module_section_activity_id",
+  as: "activity",
+});
+
+// User → CourseModuleSectionEvidence
+User.hasMany(CourseModuleSectionEvidence, {
+  foreignKey: "user_id",
+  as: "courseEvidence",
+});
+CourseModuleSectionEvidence.belongsTo(User, {
+  foreignKey: "user_id",
+  as: "user",
+});
+
+// CourseModuleSectionActivity → CourseModuleSectionExam
+CourseModuleSectionActivity.hasOne(CourseModuleSectionExam, {
+  foreignKey: "course_module_section_activity_id",
+  as: "exam",
+});
+CourseModuleSectionExam.belongsTo(CourseModuleSectionActivity, {
+  foreignKey: "course_module_section_activity_id",
+  as: "activity",
+});
+
+// CourseModuleSectionExam → CourseModuleSectionQuestion
+CourseModuleSectionExam.hasMany(CourseModuleSectionQuestion, {
+  foreignKey: "course_module_section_exam_id",
+  as: "questions",
+});
+CourseModuleSectionQuestion.belongsTo(CourseModuleSectionExam, {
+  foreignKey: "course_module_section_exam_id",
+  as: "exam",
+});
+
+// CourseModuleSectionQuestion → CourseModuleSectionAnswer
+CourseModuleSectionQuestion.hasMany(CourseModuleSectionAnswer, {
+  foreignKey: "course_module_section_question_id",
+  as: "answers",
+});
+CourseModuleSectionAnswer.belongsTo(CourseModuleSectionQuestion, {
+  foreignKey: "course_module_section_question_id",
+  as: "question",
+});
+
+// CourseModuleSectionQuestion → CourseModuleSectionQuestionUserAnswer
+CourseModuleSectionQuestion.hasMany(CourseModuleSectionQuestionUserAnswer, {
+  foreignKey: "question_id",
+  as: "userAnswers",
+});
+CourseModuleSectionQuestionUserAnswer.belongsTo(CourseModuleSectionQuestion, {
+  foreignKey: "question_id",
+  as: "question",
+});
+
+// CourseModuleSectionAnswer → CourseModuleSectionQuestionUserAnswer
+CourseModuleSectionAnswer.hasMany(CourseModuleSectionQuestionUserAnswer, {
+  foreignKey: "answer_option_id",
+  as: "userAnswers",
+});
+CourseModuleSectionQuestionUserAnswer.belongsTo(CourseModuleSectionAnswer, {
+  foreignKey: "answer_option_id",
+  as: "answer_option",
+});
+
+// User → CourseModuleSectionQuestionUserAnswer
+User.hasMany(CourseModuleSectionQuestionUserAnswer, {
+  foreignKey: "user_id",
+  as: "courseUserAnswers",
+});
+CourseModuleSectionQuestionUserAnswer.belongsTo(User, {
+  foreignKey: "user_id",
+  as: "user",
+});
+
 export {
   User,
   Prize,
@@ -113,4 +250,16 @@ export {
   Agreement,
   AgreementImage,
   PointRequest,
+  // Courses
+  Department,
+  Course,
+  CourseModule,
+  CourseModuleSection,
+  CourseModuleSectionLink,
+  CourseModuleSectionActivity,
+  CourseModuleSectionEvidence,
+  CourseModuleSectionExam,
+  CourseModuleSectionQuestion,
+  CourseModuleSectionAnswer,
+  CourseModuleSectionQuestionUserAnswer,
 };
