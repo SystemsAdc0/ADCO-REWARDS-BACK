@@ -28,15 +28,15 @@ import updates from "./routes/updates";
 // Courses
 import departmentRoutes from "./routes/courses/departments";
 import courseRoutes from "./routes/courses/courses";
-import courseModuleRoutes from "./routes/courses/courseModules";
-import courseSectionRoutes from "./routes/courses/courseModuleSections";
-import courseLinkRoutes from "./routes/courses/courseModuleSectionLinks";
-import courseActivityRoutes from "./routes/courses/courseModuleSectionActivities";
-import courseEvidenceRoutes from "./routes/courses/courseModuleSectionEvidence";
-import courseExamRoutes from "./routes/courses/courseModuleSectionExams";
-import courseQuestionRoutes from "./routes/courses/courseModuleSectionQuestions";
-import courseAnswerRoutes from "./routes/courses/courseModuleSectionAnswers";
-import courseUserAnswerRoutes from "./routes/courses/courseModuleSectionUserAnswers";
+import moduleRoutes from "./routes/courses/courseModules";
+import sectionRoutes from "./routes/courses/sections";
+import sectionContentRoutes from "./routes/courses/sectionContents";
+import sectionEvidenceRoutes from "./routes/courses/sectionEvidences";
+import examRoutes from "./routes/courses/exams";
+import examQuestionRoutes from "./routes/courses/examQuestions";
+import examAnswerRoutes from "./routes/courses/examAnswers";
+import examUserAnswerRoutes from "./routes/courses/examUserAnswers";
+
 import courseProgressRoutes from "./routes/courses/courseProgress";
 import courseAssignmentRoutes from "./routes/courses/courseAssignments";
 
@@ -116,15 +116,14 @@ app.use("/api/updates", updates);
 
 // Courses routes — rutas específicas primero, genérica (/api/courses) al final
 app.use("/api/courses/departments", departmentRoutes);
-app.use("/api/courses/modules", courseModuleRoutes);
-app.use("/api/courses/sections", courseSectionRoutes);
-app.use("/api/courses/links", courseLinkRoutes);
-app.use("/api/courses/activities", courseActivityRoutes);
-app.use("/api/courses/evidence", courseEvidenceRoutes);
-app.use("/api/courses/exams", courseExamRoutes);
-app.use("/api/courses/questions", courseQuestionRoutes);
-app.use("/api/courses/answers", courseAnswerRoutes);
-app.use("/api/courses/user-answers", courseUserAnswerRoutes);
+app.use("/api/courses/modules", moduleRoutes);
+app.use("/api/courses/sections", sectionRoutes);
+app.use("/api/courses/content", sectionContentRoutes);
+app.use("/api/courses/evidence", sectionEvidenceRoutes);
+app.use("/api/courses/exams", examRoutes);
+app.use("/api/courses/questions", examQuestionRoutes);
+app.use("/api/courses/answers", examAnswerRoutes);
+app.use("/api/courses/user-answers", examUserAnswerRoutes);
 app.use("/api/courses/progress", courseProgressRoutes);
 app.use("/api/courses/assignments", courseAssignmentRoutes);
 app.use("/api/courses", courseRoutes);
@@ -148,7 +147,7 @@ async function start() {
       if (err.code === "EADDRINUSE") {
         console.error(
           `Puerto ${PORT} ya está en uso. Mata el proceso anterior.`,
-        ); 
+        );
       } else {
         console.error("Error en el servidor:", err);
       }

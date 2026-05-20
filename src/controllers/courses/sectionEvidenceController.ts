@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { AuthRequest } from "../../types";
-import CourseModuleSectionEvidence from "../../models/courses/CourseModuleSectionEvidence";
-import CourseModuleSectionActivity from "../../models/courses/CourseModuleSectionActivity";
+import SectionEvidence from "../../models/courses/SectionEvidence";
+import Section from "../../models/courses/Section";
 import { User } from "../../models";
 
 export const getEvidence = async (
@@ -10,17 +10,16 @@ export const getEvidence = async (
 ): Promise<void> => {
   try {
     const where: Record<string, unknown> = {};
-    if (req.query.course_module_section_activity_id)
-      where.course_module_section_activity_id =
-        req.query.course_module_section_activity_id;
+    if (req.query.section_id) where.section_id = req.query.section_id;
     if (req.query.status) where.status = req.query.status;
 
     if (req.user?.role === "user") where.user_id = req.user.id;
 
-    const evidence = await CourseModuleSectionEvidence.findAll({
+    const evidence = await SectionEvidence.findAll({
       where,
       include: [
         { model: User, as: "user", attributes: ["id", "name", "email"] },
+        { model: User, as: "reviewer", attributes: ["id", "name", "email"] },
       ],
       order: [["id", "DESC"]],
     });
@@ -35,14 +34,12 @@ export const getEvidenceById = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const evidence = await CourseModuleSectionEvidence.findByPk(
-      String(req.params.id),
-      {
-        include: [
-          { model: User, as: "user", attributes: ["id", "name", "email"] },
-        ],
-      },
-    );
+    const evidence = await SectionEvidence.findByPk(String(req.params.id), {
+      include: [
+        { model: User, as: "user", attributes: ["id", "name", "email"] },
+        { model: User, as: "reviewer", attributes: ["id", "name", "email"] },
+      ],
+    });
     if (!evidence) {
       res.status(404).json({ message: "Evidencia no encontrada" });
       return;
@@ -58,17 +55,23 @@ export const submitEvidence = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { course_module_section_activity_id, evidence } = req.body;
-    const activity = await CourseModuleSectionActivity.findByPk(
-      course_module_section_activity_id,
-    );
-    if (!activity) {
+    const { section_id, evidence } = req.body;
+    const section = await Section.findByPk(section_id);
+    if (!section) {
       res.status(404).json({ message: "Actividad no encontrada" });
       return;
     }
-    const created = await CourseModuleSectionEvidence.create({
+
+    if (section.type !== "evidence") {
+      res.status(400).json({
+        message: "La sección no es de tipo evidencia",
+      });
+      return;
+    }
+
+    const created = await SectionEvidence.create({
       user_id: req.user!.id,
-      course_module_section_activity_id,
+      section_id,
       evidence,
     });
     res.status(201).json(created);
@@ -83,14 +86,21 @@ export const reviewEvidence = async (
 ): Promise<void> => {
   try {
     const { status } = req.body;
-    const evidence = await CourseModuleSectionEvidence.findByPk(
-      String(req.params.id),
-    );
+    const evidence = await SectionEvidence.findByPk(String(req.params.id));
     if (!evidence) {
       res.status(404).json({ message: "Evidencia no encontrada" });
       return;
     }
-    await evidence.update({ status });
+    if (!["approved", "rejected"].includes(status)) {
+      res.status(400).json({
+        message: "Estado inválido",
+      });
+      return;
+    }
+    await evidence.update({
+      status,
+      reviewed_by: req.user!.id,
+    });
     res.json(evidence);
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
@@ -102,7 +112,7 @@ export const deleteEvidence = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const evidence = await CourseModuleSectionEvidence.findByPk(
+    const evidence = await SectionEvidence.findByPk(
       String(req.params.id),
     );
     if (!evidence) {

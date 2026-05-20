@@ -6,13 +6,14 @@ import { AuthRequest } from "../types";
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password, points, role, birth_date, company } = req.body;
+    const { name, email, password, points, role, birth_date, company } =
+      req.body;
     const exists = await User.findOne({ where: { email } });
     if (exists) {
       res.status(400).json({ message: "El email ya esta registrado" });
       return;
     }
-  
+
     const hashed = await bcrypt.hash(password, 10);
     const user = await User.create({
       name,
@@ -33,7 +34,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
-   
     const { email, password } = req.body;
     const user = await User.findOne({ where: { email } });
     if (!user) {
@@ -52,7 +52,12 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
+      {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        department_id: user.department_id,
+      },
       process.env.JWT_SECRET as string,
       { expiresIn: process.env.JWT_EXPIRES_IN || "7d" } as jwt.SignOptions,
     );
@@ -69,6 +74,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         can_request_points: user.can_request_points ?? false,
         company: user.company ?? null,
         birth_date: user.birth_date ?? null,
+        department_id: user.department_id ?? null,
       },
     });
   } catch (err) {
@@ -76,17 +82,24 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const changePassword = async (req: AuthRequest, res: Response): Promise<void> => {
+export const changePassword = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
   try {
     const { currentPassword, newPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
-      res.status(400).json({ message: "Se requieren la contraseña actual y la nueva" });
+      res
+        .status(400)
+        .json({ message: "Se requieren la contraseña actual y la nueva" });
       return;
     }
 
     if (newPassword.length < 6) {
-      res.status(400).json({ message: "La nueva contraseña debe tener al menos 6 caracteres" });
+      res.status(400).json({
+        message: "La nueva contraseña debe tener al menos 6 caracteres",
+      });
       return;
     }
 
@@ -107,7 +120,9 @@ export const changePassword = async (req: AuthRequest, res: Response): Promise<v
 
     res.json({ message: "Contraseña actualizada correctamente" });
   } catch (err) {
-    res.status(500).json({ message: "Error al cambiar la contraseña", error: err });
+    res
+      .status(500)
+      .json({ message: "Error al cambiar la contraseña", error: err });
   }
 };
 

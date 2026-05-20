@@ -1,47 +1,45 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../../config/database";
 
-export type UserAnswerStatus =
+export type ExamUserAnswerStatus =
   | "pending"
   | "approved"
   | "rejected"
   | "auto_approved";
 
-interface CourseModuleSectionQuestionUserAnswerAttributes {
+interface ExamUserAnswerAttributes {
   id: number;
   user_id: number;
   question_id: number;
   answer_text?: string;
   answer_option_id?: number;
-  status: UserAnswerStatus;
+  status: ExamUserAnswerStatus;
+  is_correct?: boolean;
   created_at?: Date;
   updated_at?: Date;
 }
 
-interface CourseModuleSectionQuestionUserAnswerCreationAttributes
-  extends Optional<
-    CourseModuleSectionQuestionUserAnswerAttributes,
-    "id" | "answer_text" | "answer_option_id" | "status"
-  > {}
+interface ExamUserAnswerCreationAttributes extends Optional<
+  ExamUserAnswerAttributes,
+  "id" | "answer_text" | "answer_option_id" | "status" | "is_correct"
+> {}
 
-class CourseModuleSectionQuestionUserAnswer
-  extends Model<
-    CourseModuleSectionQuestionUserAnswerAttributes,
-    CourseModuleSectionQuestionUserAnswerCreationAttributes
-  >
-  implements CourseModuleSectionQuestionUserAnswerAttributes
+class ExamUserAnswer
+  extends Model<ExamUserAnswerAttributes, ExamUserAnswerCreationAttributes>
+  implements ExamUserAnswerAttributes
 {
   public id!: number;
   public user_id!: number;
   public question_id!: number;
   public answer_text?: string;
   public answer_option_id?: number;
-  public status!: UserAnswerStatus;
+  public status!: ExamUserAnswerStatus;
+  public is_correct?: boolean;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
 
-CourseModuleSectionQuestionUserAnswer.init(
+ExamUserAnswer.init(
   {
     id: {
       type: DataTypes.INTEGER.UNSIGNED,
@@ -56,14 +54,19 @@ CourseModuleSectionQuestionUserAnswer.init(
       type: DataTypes.ENUM("pending", "approved", "rejected", "auto_approved"),
       defaultValue: "pending",
     },
+    is_correct: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
   },
   {
     sequelize,
-    tableName: "courses_modules_sections_questions_users_answers",
+    tableName: "exam_users_answers",
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
   },
 );
 
-export default CourseModuleSectionQuestionUserAnswer;
+export default ExamUserAnswer;

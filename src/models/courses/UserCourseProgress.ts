@@ -4,7 +4,7 @@ import sequelize from "../../config/database";
 interface UserCourseProgressAttributes {
   id: number;
   user_id: number;
-  course_module_section_id: number;
+  section_id: number;
   completed_at?: Date;
   created_at?: Date;
   updated_at?: Date;
@@ -22,7 +22,7 @@ class UserCourseProgress
 {
   public id!: number;
   public user_id!: number;
-  public course_module_section_id!: number;
+  public section_id!: number;
   public completed_at!: Date;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
@@ -36,7 +36,7 @@ UserCourseProgress.init(
       primaryKey: true,
     },
     user_id: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
-    course_module_section_id: {
+    section_id: {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
     },
@@ -49,7 +49,7 @@ UserCourseProgress.init(
     createdAt: "created_at",
     updatedAt: "updated_at",
     indexes: [
-      { unique: true, fields: ["user_id", "course_module_section_id"] },
+      { unique: true, fields: ["user_id", "section_id"] },
     ],
   },
 );

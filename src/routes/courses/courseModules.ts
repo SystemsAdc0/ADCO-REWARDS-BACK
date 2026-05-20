@@ -5,7 +5,8 @@ import {
   createCourseModule,
   updateCourseModule,
   deleteCourseModule,
-} from "../../controllers/courses/courseModuleController";
+  reorderCourseModules,
+} from "../../controllers/courses/moduleController";
 import { authenticate } from "../../middlewares/authenticate";
 import { authorize } from "../../middlewares/authorize";
 
@@ -52,6 +53,7 @@ router.get("/:id", authenticate, getCourseModuleById);
  */
 router.post("/", authenticate, authorize("admin"), createCourseModule);
 router.put("/:id", authenticate, authorize("admin"), updateCourseModule);
+router.patch("/reorder", authenticate, authorize("admin"), reorderCourseModules);
 router.delete("/:id", authenticate, authorize("admin"), deleteCourseModule);
 
 export default router;

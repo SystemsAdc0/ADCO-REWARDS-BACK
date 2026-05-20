@@ -5,7 +5,10 @@ import {
   createQuestion,
   updateQuestion,
   deleteQuestion,
-} from "../../controllers/courses/courseModuleSectionQuestionController";
+  reorderQuestions,
+  createFullQuestion,
+  updateFullQuestion,
+} from "../../controllers/courses/examQuestionController";
 import { authenticate } from "../../middlewares/authenticate";
 import { authorize } from "../../middlewares/authorize";
 
@@ -50,7 +53,10 @@ router.get("/:id", authenticate, getQuestionById);
  *       201: { description: Pregunta creada }
  */
 router.post("/", authenticate, authorize("admin"), createQuestion);
+router.post("/full", authenticate, authorize("admin"), createFullQuestion);
+router.put("/:id/full", authenticate, authorize("admin"), updateFullQuestion);
 router.put("/:id", authenticate, authorize("admin"), updateQuestion);
+router.patch("/reorder", authenticate, authorize("admin"), reorderQuestions);
 router.delete("/:id", authenticate, authorize("admin"), deleteQuestion);
 
 export default router;

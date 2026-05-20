@@ -1,36 +1,37 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../../config/database";
 
-export type QuestionType = "multiple_choice" | "open";
+export type ExamQuestionType = "multiple_choice" | "open";
 
-interface CourseModuleSectionQuestionAttributes {
+interface ExamQuestionAttributes {
   id: number;
   question: string;
-  type: QuestionType;
-  course_module_section_exam_id: number;
+  type: ExamQuestionType;
+  exam_id: number;
+  sort_order: number;
   created_at?: Date;
   updated_at?: Date;
 }
 
-interface CourseModuleSectionQuestionCreationAttributes
-  extends Optional<CourseModuleSectionQuestionAttributes, "id" | "type"> {}
+interface ExamQuestionCreationAttributes extends Optional<
+  ExamQuestionAttributes,
+  "id" | "type"
+> {}
 
-class CourseModuleSectionQuestion
-  extends Model<
-    CourseModuleSectionQuestionAttributes,
-    CourseModuleSectionQuestionCreationAttributes
-  >
-  implements CourseModuleSectionQuestionAttributes
+class ExamQuestion
+  extends Model<ExamQuestionAttributes, ExamQuestionCreationAttributes>
+  implements ExamQuestionAttributes
 {
   public id!: number;
   public question!: string;
-  public type!: QuestionType;
-  public course_module_section_exam_id!: number;
+  public type!: ExamQuestionType;
+  public exam_id!: number;
+  public sort_order!: number;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
 
-CourseModuleSectionQuestion.init(
+ExamQuestion.init(
   {
     id: {
       type: DataTypes.INTEGER.UNSIGNED,
@@ -42,18 +43,23 @@ CourseModuleSectionQuestion.init(
       type: DataTypes.ENUM("multiple_choice", "open"),
       defaultValue: "multiple_choice",
     },
-    course_module_section_exam_id: {
+    exam_id: {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
+    },
+    sort_order: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
     },
   },
   {
     sequelize,
-    tableName: "courses_modules_sections_questions",
+    tableName: "exam_questions",
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
   },
 );
 
-export default CourseModuleSectionQuestion;
+export default ExamQuestion;

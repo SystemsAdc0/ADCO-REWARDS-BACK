@@ -1,17 +1,19 @@
 import { Request, Response } from "express";
+import { Op } from "sequelize";
+
 import { AuthRequest } from "../../types";
+
 import Course from "../../models/courses/Course";
 import Department from "../../models/courses/Department";
-import CourseModule from "../../models/courses/CourseModule";
-import CourseModuleSection from "../../models/courses/CourseModuleSection";
-import CourseModuleSectionLink from "../../models/courses/CourseModuleSectionLink";
-import CourseModuleSectionActivity from "../../models/courses/CourseModuleSectionActivity";
-import CourseModuleSectionExam from "../../models/courses/CourseModuleSectionExam";
-import CourseModuleSectionQuestion from "../../models/courses/CourseModuleSectionQuestion";
-import CourseModuleSectionAnswer from "../../models/courses/CourseModuleSectionAnswer";
+import CourseModule from "../../models/courses/Module";
+import Section from "../../models/courses/Section";
+import SectionContent from "../../models/courses/SectionContent";
+import Exam from "../../models/courses/Exam";
+import ExamQuestion from "../../models/courses/ExamQuestion";
+import ExamAnswer from "../../models/courses/ExamAnswer";
+
 import User from "../../models/User";
 import UserCourseAssignment from "../../models/courses/UserCourseAssignment";
-import { Op } from "sequelize";
 
 export const getCourses = async (
   req: Request,
@@ -56,7 +58,8 @@ export const getMyCourses = async (
 
     // Build OR condition: department courses + manually assigned courses
     const orConditions: Record<string, unknown>[] = [];
-    if (dbUser.department_id) orConditions.push({ department_id: dbUser.department_id });
+    if (dbUser.department_id)
+      orConditions.push({ department_id: dbUser.department_id });
     if (manualIds.length > 0) orConditions.push({ id: manualIds });
 
     if (orConditions.length === 0) {
@@ -79,9 +82,9 @@ export const getMyCourses = async (
           separate: true,
           include: [
             {
-              model: CourseModuleSection,
+              model: Section,
               as: "sections",
-              attributes: ["id", "name", "type", "course_module_id"],
+              attributes: ["id", "name", "type", "module_id"],
               order: [["id", "ASC"]],
               separate: true,
             },
@@ -124,33 +127,40 @@ export const getCourseFullContent = async (
   try {
     const course = await Course.findByPk(String(req.params.id), {
       include: [
-        { model: Department, as: "department", attributes: ["id", "name"] },
+        {
+          model: Department,
+          as: "department",
+          attributes: ["id", "name"],
+        },
+
         {
           model: CourseModule,
           as: "modules",
+
           include: [
             {
-              model: CourseModuleSection,
+              model: Section,
               as: "sections",
+
               include: [
-                { model: CourseModuleSectionLink, as: "links" },
                 {
-                  model: CourseModuleSectionActivity,
-                  as: "activities",
+                  model: SectionContent,
+                  as: "contents",
+                },
+
+                {
+                  model: Exam,
+                  as: "exam",
+
                   include: [
                     {
-                      model: CourseModuleSectionExam,
-                      as: "exam",
+                      model: ExamQuestion,
+                      as: "questions",
+
                       include: [
                         {
-                          model: CourseModuleSectionQuestion,
-                          as: "questions",
-                          include: [
-                            {
-                              model: CourseModuleSectionAnswer,
-                              as: "answers",
-                            },
-                          ],
+                          model: ExamAnswer,
+                          as: "answers",
                         },
                       ],
                     },
@@ -161,14 +171,50 @@ export const getCourseFullContent = async (
           ],
         },
       ],
+
+      order: [
+        [{ model: CourseModule, as: "modules" }, "sort_order", "ASC"],
+
+        [
+          { model: CourseModule, as: "modules" },
+          { model: Section, as: "sections" },
+          "sort_order",
+          "ASC",
+        ],
+
+        [
+          { model: CourseModule, as: "modules" },
+          { model: Section, as: "sections" },
+          { model: SectionContent, as: "contents" },
+          "sort_order",
+          "ASC",
+        ],
+
+        [
+          { model: CourseModule, as: "modules" },
+          { model: Section, as: "sections" },
+          { model: Exam, as: "exam" },
+          { model: ExamQuestion, as: "questions" },
+          "sort_order",
+          "ASC",
+        ],
+      ],
     });
+
     if (!course) {
-      res.status(404).json({ message: "Curso no encontrado" });
+      res.status(404).json({
+        message: "Curso no encontrado",
+      });
+
       return;
     }
+
     res.json(course);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({
+      message: "Error",
+      error: err,
+    });
   }
 };
 

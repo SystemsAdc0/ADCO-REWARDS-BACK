@@ -1,11 +1,12 @@
 import { Router } from "express";
 import {
-  getLinks,
-  getLinkById,
-  createLink,
-  updateLink,
-  deleteLink,
-} from "../../controllers/courses/courseModuleSectionLinkController";
+  getSectionContents,
+  getSectionContentById,
+  createSectionContent,
+  updateSectionContent,
+  deleteSectionContent,
+  reorderSectionContet,
+} from "../../controllers/courses/sectionContentController";
 import { authenticate } from "../../middlewares/authenticate";
 import { authorize } from "../../middlewares/authorize";
 
@@ -25,8 +26,8 @@ const router = Router();
  *     responses:
  *       200: { description: Lista de enlaces }
  */
-router.get("/", authenticate, getLinks);
-router.get("/:id", authenticate, getLinkById);
+router.get("/", authenticate, getSectionContents);
+router.get("/:id", authenticate, getSectionContentById);
 
 /**
  * @swagger
@@ -49,8 +50,9 @@ router.get("/:id", authenticate, getLinkById);
  *     responses:
  *       201: { description: Enlace creado }
  */
-router.post("/", authenticate, authorize("admin"), createLink);
-router.put("/:id", authenticate, authorize("admin"), updateLink);
-router.delete("/:id", authenticate, authorize("admin"), deleteLink);
+router.post("/", authenticate, authorize("admin"), createSectionContent);
+router.put("/:id", authenticate, authorize("admin"), updateSectionContent);
+router.patch("/reorder", authenticate, authorize("admin"), reorderSectionContet);
+router.delete("/:id", authenticate, authorize("admin"), deleteSectionContent);
 
 export default router;

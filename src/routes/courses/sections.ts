@@ -5,7 +5,8 @@ import {
   createSection,
   updateSection,
   deleteSection,
-} from "../../controllers/courses/courseModuleSectionController";
+  reorderSections,
+} from "../../controllers/courses/sectionController";
 import { authenticate } from "../../middlewares/authenticate";
 import { authorize } from "../../middlewares/authorize";
 
@@ -51,6 +52,7 @@ router.get("/:id", authenticate, getSectionById);
  */
 router.post("/", authenticate, authorize("admin"), createSection);
 router.put("/:id", authenticate, authorize("admin"), updateSection);
+router.patch("/reorder", authenticate, authorize("admin"), reorderSections);
 router.delete("/:id", authenticate, authorize("admin"), deleteSection);
 
 export default router;

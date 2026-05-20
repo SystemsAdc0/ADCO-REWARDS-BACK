@@ -5,9 +5,14 @@ import {
   createExam,
   updateExam,
   deleteExam,
-} from "../../controllers/courses/courseModuleSectionExamController";
+  getExamResult,
+} from "../../controllers/courses/examController";
 import { authenticate } from "../../middlewares/authenticate";
 import { authorize } from "../../middlewares/authorize";
+import {
+  createFullQuestion,
+  updateFullQuestion,
+} from "../../controllers/courses/examQuestionController";
 
 const router = Router();
 
@@ -27,6 +32,7 @@ const router = Router();
  */
 router.get("/", authenticate, getExams);
 router.get("/:id", authenticate, getExamById);
+router.get("/:id/result", authenticate, getExamResult)
 
 /**
  * @swagger
@@ -51,6 +57,8 @@ router.get("/:id", authenticate, getExamById);
  *       201: { description: Examen creado }
  */
 router.post("/", authenticate, authorize("admin"), createExam);
+router.post("/full", authenticate, authorize("admin"), createFullQuestion);
+router.put("/:id/full", authenticate, authorize("admin"), updateFullQuestion);
 router.put("/:id", authenticate, authorize("admin"), updateExam);
 router.delete("/:id", authenticate, authorize("admin"), deleteExam);
 

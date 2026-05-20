@@ -5,7 +5,7 @@ import {
   submitEvidence,
   reviewEvidence,
   deleteEvidence,
-} from "../../controllers/courses/courseModuleSectionEvidenceController";
+} from "../../controllers/courses/sectionEvidenceController";
 import { authenticate } from "../../middlewares/authenticate";
 import { authorize } from "../../middlewares/authorize";
 

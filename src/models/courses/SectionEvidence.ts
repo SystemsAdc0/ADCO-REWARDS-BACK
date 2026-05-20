@@ -1,41 +1,39 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../../config/database";
 
-export type EvidenceStatus = "approved" | "rejected" | "pending";
+export type SectionEvidenceStatus = "approved" | "rejected" | "pending";
 
-interface CourseModuleSectionEvidenceAttributes {
+interface SectionEvidenceAttributes {
   id: number;
   user_id: number;
-  course_module_section_activity_id: number;
+  section_id: number;
   evidence: string;
-  status: EvidenceStatus;
+  status: SectionEvidenceStatus;
+  reviewed_by?: number;
   created_at?: Date;
   updated_at?: Date;
 }
 
-interface CourseModuleSectionEvidenceCreationAttributes
-  extends Optional<
-    CourseModuleSectionEvidenceAttributes,
-    "id" | "status"
-  > {}
+interface SectionEvidenceCreationAttributes extends Optional<
+  SectionEvidenceAttributes,
+  "id" | "status" | "reviewed_by"
+> {}
 
-class CourseModuleSectionEvidence
-  extends Model<
-    CourseModuleSectionEvidenceAttributes,
-    CourseModuleSectionEvidenceCreationAttributes
-  >
-  implements CourseModuleSectionEvidenceAttributes
+class SectionEvidence
+  extends Model<SectionEvidenceAttributes, SectionEvidenceCreationAttributes>
+  implements SectionEvidenceAttributes
 {
   public id!: number;
   public user_id!: number;
-  public course_module_section_activity_id!: number;
+  public section_id!: number;
   public evidence!: string;
-  public status!: EvidenceStatus;
+  public status!: SectionEvidenceStatus;
+  public reviewed_by?: number;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
 
-CourseModuleSectionEvidence.init(
+SectionEvidence.init(
   {
     id: {
       type: DataTypes.INTEGER.UNSIGNED,
@@ -43,7 +41,7 @@ CourseModuleSectionEvidence.init(
       primaryKey: true,
     },
     user_id: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
-    course_module_section_activity_id: {
+    section_id: {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
     },
@@ -52,14 +50,18 @@ CourseModuleSectionEvidence.init(
       type: DataTypes.ENUM("approved", "rejected", "pending"),
       defaultValue: "pending",
     },
+    reviewed_by: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+    },
   },
   {
     sequelize,
-    tableName: "courses_modules_sections_evidence",
+    tableName: "sections_evidence",
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
   },
 );
 
-export default CourseModuleSectionEvidence;
+export default SectionEvidence;

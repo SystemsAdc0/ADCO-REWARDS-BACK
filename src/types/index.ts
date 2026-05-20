@@ -1,11 +1,13 @@
 import { Request } from "express";
 
 export type UserRole = "admin" | "moderator" | "user" | "visitor" | "developer";
+export type CourseStatus = "draft" | "published" | "archived";
 
 export interface JwtPayload {
   id: number;
   email: string;
   role: UserRole;
+  department_id?: number;
 }
 
 export interface AuthRequest extends Request {

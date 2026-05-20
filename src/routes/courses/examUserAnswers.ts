@@ -5,7 +5,7 @@ import {
   submitUserAnswer,
   reviewUserAnswer,
   deleteUserAnswer,
-} from "../../controllers/courses/courseModuleSectionUserAnswerController";
+} from "../../controllers/courses/examUserAnswerController";
 import { authenticate } from "../../middlewares/authenticate";
 import { authorize } from "../../middlewares/authorize";
 

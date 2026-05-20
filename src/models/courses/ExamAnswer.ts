@@ -1,37 +1,37 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../../config/database";
 
-interface CourseModuleSectionAnswerAttributes {
+interface ExamAnswerAttributes {
   id: number;
   answer: string;
   is_correct: boolean;
-  course_module_section_question_id: number;
+  question_id: number;
   created_at?: Date;
   updated_at?: Date;
 }
 
-interface CourseModuleSectionAnswerCreationAttributes
+interface ExamAnswerCreationAttributes
   extends Optional<
-    CourseModuleSectionAnswerAttributes,
+    ExamAnswerAttributes,
     "id" | "is_correct"
   > {}
 
-class CourseModuleSectionAnswer
+class ExamAnswer
   extends Model<
-    CourseModuleSectionAnswerAttributes,
-    CourseModuleSectionAnswerCreationAttributes
+    ExamAnswerAttributes,
+    ExamAnswerCreationAttributes
   >
-  implements CourseModuleSectionAnswerAttributes
+  implements ExamAnswerAttributes
 {
   public id!: number;
   public answer!: string;
   public is_correct!: boolean;
-  public course_module_section_question_id!: number;
+  public question_id!: number;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
 
-CourseModuleSectionAnswer.init(
+ExamAnswer.init(
   {
     id: {
       type: DataTypes.INTEGER.UNSIGNED,
@@ -44,18 +44,18 @@ CourseModuleSectionAnswer.init(
       allowNull: false,
       defaultValue: false,
     },
-    course_module_section_question_id: {
+    question_id: {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
     },
   },
   {
     sequelize,
-    tableName: "courses_modules_sections_answers",
+    tableName: "exam_answers",
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
   },
 );
 
-export default CourseModuleSectionAnswer;
+export default ExamAnswer;
