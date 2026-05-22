@@ -49,8 +49,11 @@ export const createRedemption = async (
       points: user.points - prize.points_required,
     });
 
+    const newStock = prize.stock - 1;
+
     await prize.update({
-      stock: prize.stock - 1,
+      stock: newStock,
+      status: newStock <= 0 ? "inactive" : "active",
     });
 
     const redemption = await Redemption.create({
@@ -212,7 +215,6 @@ export const updateRedemptionStatus = async (
       status === "rejected"
         ? `Tu canje del ${prize?.name} fue cancelado, se te devolvieron ${redemption.points_spent} puntos`
         : `Tu canje de "${prize?.name}" fue actualizado a: ${statusSpanish[status]}`;
-  
 
     await createNotification(redemption.user_id, msg, "info", status);
     res.json({
