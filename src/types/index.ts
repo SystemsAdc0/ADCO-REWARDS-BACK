@@ -32,3 +32,16 @@ export type ActivityStatus = "active" | "inactive" | "finished";
 export type PrizeStatus = "active" | "inactive";
 export type UserStatus = "active" | "inactive";
 export type ActivityAnswerStatus = "pending" | "approved" | "rejected";
+export type EventCategory =
+  | "informative"
+  | "training"
+  | "social"
+  | "recreational"
+  | "team_building"
+  | "conference"
+  | "workshop"
+  | "celebration"
+  | "health_safety"
+  | "corporate"
+  | "community"
+  | "other";

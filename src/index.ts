@@ -24,6 +24,8 @@ import agreements from "./routes/agreements";
 import pointRequests from "./routes/pointRequests";
 import duelComments from "./routes/duelComments";
 import updates from "./routes/updates";
+import eventRoutes from "./routes/events";
+import { cancelEvent } from "./controllers/eventController";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -97,6 +99,7 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/agreements", agreements);
 app.use("/api/point-requests", pointRequests);
 app.use("/api/duel-comments", duelComments);
+app.use("/api/events", eventRoutes);
 app.use("/api/updates", updates);
 // Health check
 app.get("/health", (_req, res) =>
@@ -118,7 +121,7 @@ async function start() {
       if (err.code === "EADDRINUSE") {
         console.error(
           `Puerto ${PORT} ya está en uso. Mata el proceso anterior.`,
-        ); 
+        );
       } else {
         console.error("Error en el servidor:", err);
       }
@@ -130,4 +133,5 @@ async function start() {
   }
 }
 
+// cancelEvent(10);
 start();

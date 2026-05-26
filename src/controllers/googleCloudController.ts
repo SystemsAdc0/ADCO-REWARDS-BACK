@@ -117,6 +117,32 @@ export const agreementUpload = async (
   }
 };
 
+export const eventUpload = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ message: "No se recibió imagen" });
+      return;
+    }
+    const webpBuffer = await sharp(req.file.buffer)
+      .webp({ quality: 82 })
+      .toBuffer();
+    const objectName = `events/${Date.now()}-${crypto.randomUUID()}.webp`;
+    const gcsFile = bucketPublic.file(objectName);
+    await gcsFile.save(webpBuffer, {
+      contentType: "image/webp",
+      resumable: false,
+    });
+    const publicUrl = `https://storage.googleapis.com/${bucketPublic.name}/${objectName}`;
+    res.json({ objectName, publicUrl });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error procesando imagen" });
+  }
+};
+
 export const googleActivityEntries = async (
   req: Request,
   res: Response,
