@@ -4,7 +4,7 @@ import { AuthRequest } from "../types";
 import LocationImage from "../models/LocationImage";
 import EventRegistration from "../models/EventRegistration";
 import { Notification, User } from "../models";
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 import { createNotification } from "../services/notificationService";
 
 export const getEvents = async (
@@ -25,7 +25,7 @@ export const getEvents = async (
     }
 
     if (!isAdmin) {
-      where.status = "active";
+      where.status = ["active", "cancelled"];
     }
 
     // Desactivar eventos finalizados
@@ -43,6 +43,7 @@ export const getEvents = async (
 
     const events = await Event.findAll({
       where,
+      attributes: { exclude: ["created_at"] },
       include: [
         {
           model: LocationImage,
@@ -51,13 +52,15 @@ export const getEvents = async (
         {
           model: EventRegistration,
           as: "registrations",
+          attributes: ["id", "event_id", "user_id"],
           include: [
             {
               model: User,
               as: "user",
-              attributes: ["id", "name", "email"],
+              attributes: ["id", "name", "email", "avatar"],
             },
           ],
+          order: [Sequelize.fn("RAND")],
         },
       ],
       order: isAdmin ? [["id", "DESC"]] : [["start_at", "ASC"]],
@@ -293,6 +296,13 @@ export const cancelEvent = async (
       );
     }
 
+    // Eliminar registros del evento
+    await EventRegistration.destroy({
+      where: {
+        event_id: event.id,
+      },
+    });
+
     // Cambiar estado del evento
     await event.update({
       status: "cancelled",
@@ -371,6 +381,13 @@ export const registerToEvent = async (
       return;
     }
 
+    if (event.status === "cancelled") {
+      res
+        .status(400)
+        .json({ message: "No te puedes registrar a un evento cancelado" });
+      return;
+    }
+
     const existingRegistration = await EventRegistration.findOne({
       where: {
         event_id: eventId,
@@ -392,6 +409,43 @@ export const registerToEvent = async (
     });
 
     res.status(201).json(registration);
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      message: "Error al registrarse al evento",
+      error: err,
+    });
+  }
+};
+
+export const cancelRegistration = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const eventId = req.params.id;
+
+    const registration = await EventRegistration.findOne({
+      where: {
+        event_id: eventId,
+        user_id: req.user?.id,
+      },
+    });
+
+    if (!registration) {
+      res.status(404).json({
+        message: "Registro no encontrado",
+      });
+
+      return;
+    }
+
+    await registration.destroy();
+
+    res.json({
+      message: "Participación cancelada",
+    });
   } catch (err) {
     console.log(err);
 

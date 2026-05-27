@@ -5,6 +5,7 @@ import { authorize } from "../middlewares/authorize";
 
 import {
   cancelEvent,
+  cancelRegistration,
   createEvent,
   deleteEvent,
   getEventById,
@@ -46,6 +47,13 @@ router.post(
   authenticate,
   authorize("admin", "moderator", "user"),
   registerToEvent,
+);
+
+router.delete(
+  "/registrations/:id",
+  authenticate,
+  authorize("user", "moderator"),
+  cancelRegistration
 );
 
 export default router;
