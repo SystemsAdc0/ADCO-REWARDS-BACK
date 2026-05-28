@@ -55,13 +55,7 @@ export const createPrize = async (
 
     const message = `Se acaba de agregar un nuevo premio: ${name?.trim().toUpperCase()}, participa para ganar!`;
 
-    const notifications = users.map((u) => ({
-      user_id: u.id,
-      message,
-      type: "info" as const,
-    }));
-
-    await Notification.bulkCreate(notifications);
+   users.map(async (u) => await createNotification(u.id, message, "info"));
 
     res.status(201).json(prize);
   } catch (err) {
