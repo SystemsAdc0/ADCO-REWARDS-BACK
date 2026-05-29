@@ -25,7 +25,6 @@ import pointRequests from "./routes/pointRequests";
 import duelComments from "./routes/duelComments";
 import updates from "./routes/updates";
 import eventRoutes from "./routes/events";
-import { cancelEvent } from "./controllers/eventController";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -133,5 +132,4 @@ async function start() {
   }
 }
 
-// cancelEvent(10);
 start();
