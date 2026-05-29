@@ -117,29 +117,99 @@ export const agreementUpload = async (
   }
 };
 
-export const eventUpload = async (
+// Events
+const uploadEventImage = async (
   req: Request,
   res: Response,
+  folder: "banners" | "locations" | "gallery",
 ): Promise<void> => {
   try {
     if (!req.file) {
-      res.status(400).json({ message: "No se recibió imagen" });
+      res.status(400).json({
+        message: "No se recibió imagen",
+      });
+
       return;
     }
+
     const webpBuffer = await sharp(req.file.buffer)
-      .webp({ quality: 82 })
+      .webp({
+        quality: 82,
+      })
       .toBuffer();
-    const objectName = `events/${Date.now()}-${crypto.randomUUID()}.webp`;
+
+    const objectName = `events/${folder}/${Date.now()}-${crypto.randomUUID()}.webp`;
+
     const gcsFile = bucketPublic.file(objectName);
+
     await gcsFile.save(webpBuffer, {
       contentType: "image/webp",
       resumable: false,
     });
+
     const publicUrl = `https://storage.googleapis.com/${bucketPublic.name}/${objectName}`;
-    res.json({ objectName, publicUrl });
+
+    res.json({
+      objectName,
+      publicUrl,
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Error procesando imagen" });
+
+    res.status(500).json({
+      message: "Error procesando imagen",
+    });
+  }
+};
+
+const allowedFolders = ["banners", "gallery", "locations"] as const;
+
+type EventFolder = (typeof allowedFolders)[number];
+
+export const eventUpload = async (req: Request, res: Response) => {
+  try {
+    const folder = req.params.folder as EventFolder;
+
+    if (!allowedFolders.includes(folder)) {
+      return res.status(400).json({
+        message: "Folder inválido",
+      });
+    }
+    if (!req.file) {
+      res.status(400).json({
+        message: "No se recibió imagen",
+      });
+
+      return;
+    }
+
+    const webpBuffer = await sharp(req.file.buffer)
+      .webp({
+        quality: 82,
+      })
+      .toBuffer();
+
+    const objectName = `events/${folder}/${Date.now()}-${crypto.randomUUID()}.webp`;
+
+    const gcsFile = bucketPublic.file(objectName);
+
+    await gcsFile.save(webpBuffer, {
+      contentType: "image/webp",
+      resumable: false,
+    });
+
+    const publicUrl = `https://storage.googleapis.com/${bucketPublic.name}/${objectName}`;
+
+    res.json({
+      objectName,
+      publicUrl,
+    });
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      message: "Error procesando imagen",
+    });
   }
 };
 

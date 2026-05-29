@@ -16,6 +16,7 @@ import PlatformUpdate from "./PlatformUpdate";
 import EventRegistration from "./EventRegistration";
 import Event from "./Event";
 import LocationImage from "./LocationImage";
+import EventImage from "./EventImage";
 // User associations
 User.hasMany(Redemption, { foreignKey: "user_id", as: "redemptions" });
 User.hasMany(PointHistory, { foreignKey: "user_id", as: "pointHistory" });
@@ -113,7 +114,7 @@ Event.hasMany(EventRegistration, {
 
 Event.hasMany(LocationImage, {
   foreignKey: "event_id",
-  as: "images",
+  as: "location_images",
 });
 
 EventRegistration.belongsTo(Event, {
@@ -129,6 +130,16 @@ EventRegistration.belongsTo(User, {
 LocationImage.belongsTo(Event, {
   foreignKey: "event_id",
   as: "event",
+});
+
+EventImage.belongsTo(Event, {
+  foreignKey: "event_id",
+  as: "event",
+});
+
+Event.hasMany(EventImage, {
+  foreignKey: "event_id",
+  as: "event_images",
 });
 
 export {

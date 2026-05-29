@@ -1,7 +1,7 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/database";
 
-interface LocationImageAttributes {
+interface EventImageAttributes {
   id: number;
   event_id: number;
   url: string;
@@ -10,29 +10,29 @@ interface LocationImageAttributes {
   updated_at?: Date;
 }
 
-interface LocationImageCreationAttributes extends Optional<
-  LocationImageAttributes,
+interface EventImageCreationAttributes extends Optional<
+  EventImageAttributes,
   "id"
 > {}
 
-class LocationImage
-  extends Model<LocationImageAttributes, LocationImageCreationAttributes>
-  implements LocationImageAttributes
+class EventImage
+  extends Model<EventImageAttributes, EventImageCreationAttributes>
+  implements EventImageAttributes
 {
   public id!: number;
   public event_id!: number;
   public url!: string;
   public object_name!: string;
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
+  public readonly created_at?: Date;
+  public readonly updated_at?: Date;
 }
 
-LocationImage.init(
+EventImage.init(
   {
     id: {
       type: DataTypes.INTEGER.UNSIGNED,
-      autoIncrement: true,
       primaryKey: true,
+      autoIncrement: true,
     },
     event_id: {
       type: DataTypes.INTEGER.UNSIGNED,
@@ -49,11 +49,11 @@ LocationImage.init(
   },
   {
     sequelize,
-    tableName: "location_images",
+    tableName: "event_images",
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
   },
 );
 
-export default LocationImage;
+export default EventImage;

@@ -3,9 +3,27 @@ import Event from "../models/Event";
 import { AuthRequest } from "../types";
 import LocationImage from "../models/LocationImage";
 import EventRegistration from "../models/EventRegistration";
-import { Notification, User } from "../models";
+import { User } from "../models";
 import { Op, Sequelize } from "sequelize";
 import { createNotification } from "../services/notificationService";
+import EventImage from "../models/EventImage";
+import { Storage } from "@google-cloud/storage";
+
+const storage = new Storage({
+  credentials: JSON.parse(process.env.GCP_KEY as string),
+});
+const bucketPublic = storage.bucket(
+  process.env.GCS_BUCKET_NAME_PUBLIC as string,
+);
+
+async function deleteObjectFromGCS(objectName: string) {
+  if (!objectName) return;
+  try {
+    await bucketPublic.file(objectName).delete();
+  } catch (err: any) {
+    if (err?.code !== 404) console.error("GCS delete error:", err?.message);
+  }
+}
 
 export const getEvents = async (
   req: AuthRequest,
@@ -22,10 +40,6 @@ export const getEvents = async (
 
     if (req.query.category) {
       where.category = req.query.category;
-    }
-
-    if (!isAdmin) {
-      where.status = ["active", "cancelled"];
     }
 
     // Desactivar eventos finalizados
@@ -47,7 +61,11 @@ export const getEvents = async (
       include: [
         {
           model: LocationImage,
-          as: "images",
+          as: "location_images",
+        },
+        {
+          model: EventImage,
+          as: "event_images",
         },
         {
           model: EventRegistration,
@@ -63,7 +81,7 @@ export const getEvents = async (
           order: [Sequelize.fn("RAND")],
         },
       ],
-      order: isAdmin ? [["id", "DESC"]] : [["start_at", "ASC"]],
+      order: isAdmin ? [["id", "DESC"]] : [["start_at", "DESC"]],
     });
 
     res.json(events);
@@ -86,7 +104,11 @@ export const getEventById = async (
       include: [
         {
           model: LocationImage,
-          as: "images",
+          as: "location_images",
+        },
+        {
+          model: EventImage,
+          as: "event_images",
         },
       ],
     });
@@ -127,10 +149,13 @@ export const createEvent = async (
     const event = await Event.create(formattedData);
 
     if (Array.isArray(gallery) && gallery.length > 0) {
-      const formattedImages = gallery.map((img: { url: string }) => ({
-        event_id: event.id,
-        url: img.url,
-      }));
+      const formattedImages = gallery.map(
+        (img: { url: string; objectName: string }) => ({
+          event_id: event.id,
+          url: img.url,
+          object_name: img.objectName,
+        }),
+      );
 
       await LocationImage.bulkCreate(formattedImages);
     }
@@ -139,7 +164,11 @@ export const createEvent = async (
       include: [
         {
           model: LocationImage,
-          as: "images",
+          as: "location_images",
+        },
+        {
+          model: EventImage,
+          as: "event_images",
         },
       ],
     });
@@ -179,28 +208,33 @@ export const updateEvent = async (
       thumbnail: thumbnail?.url ?? event.thumbnail,
     });
 
-    if (Array.isArray(gallery)) {
-      await LocationImage.destroy({
-        where: {
-          event_id: event.id,
-        },
-      });
+    if (Array.isArray(gallery) && gallery.length > 0) {
+      // await LocationImage.destroy({
+      //   where: {
+      //     event_id: event.id,
+      //   },
+      // });
 
-      if (gallery.length > 0) {
-        const formattedImages = gallery.map((img: { url: string }) => ({
+      const formattedImages = gallery.map(
+        (img: { url: string; objectName: string }) => ({
           event_id: event.id,
           url: img.url,
-        }));
+          object_name: img.objectName,
+        }),
+      );
 
-        await LocationImage.bulkCreate(formattedImages);
-      }
+      await LocationImage.bulkCreate(formattedImages);
     }
 
     const updatedEvent = await Event.findByPk(event.id, {
       include: [
         {
           model: LocationImage,
-          as: "images",
+          as: "location_images",
+        },
+        {
+          model: EventImage,
+          as: "event_images",
         },
       ],
     });
@@ -333,7 +367,6 @@ export const getEventRegistrations = async (
       where: {
         event_id: eventId,
       },
-
       include: [
         {
           model: User,
@@ -341,7 +374,6 @@ export const getEventRegistrations = async (
           attributes: ["id", "name", "email"],
         },
       ],
-
       order: [["id", "DESC"]],
     });
 
@@ -453,5 +485,121 @@ export const cancelRegistration = async (
       message: "Error al registrarse al evento",
       error: err,
     });
+  }
+};
+
+export const createEventImages = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const eventId = req.params.id;
+
+    const event = await Event.findOne({
+      where: {
+        id: eventId,
+      },
+    });
+
+    if (!event) {
+      res.status(401).json({ message: "No se encontro el evento" });
+
+      return;
+    }
+
+    const { gallery = [] } = req.body;
+
+    if (Array.isArray(gallery) && gallery.length > 0) {
+      const formattedImages = gallery.map(
+        (img: { url: string; objectName: string }) => ({
+          event_id: event.id,
+          url: img.url,
+          object_name: img.objectName,
+        }),
+      );
+
+      await EventImage.bulkCreate(formattedImages);
+    }
+
+    res.json({
+      message: "Galería creada",
+    });
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      message: "Error al registrarse al evento",
+      error: err,
+    });
+  }
+};
+
+export const deleteLocationImageById = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    const { imageId } = req.params;
+    const image = await LocationImage.findByPk(String(imageId));
+    if (!image) {
+      res.status(404).json({ message: "Imagen no encontrada" });
+      return;
+    }
+    // Ensure the image belongs to the agreement
+    if (String(image.event_id) !== String(req.params.id)) {
+      res.status(403).json({ message: "Imagen no pertenece a este convenio" });
+      return;
+    }
+    await deleteObjectFromGCS(image.url);
+    await image.destroy();
+    res.status(200).json({ message: "Imagen eliminada" });
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const deleteEventImageById = async (req: AuthRequest, res: Response) => {
+  try {
+    const { imageId } = req.params;
+    const image = await EventImage.findByPk(String(imageId));
+    if (!image) {
+      res.status(404).json({ message: "Imagen no encontrada" });
+      return;
+    }
+    // Ensure the image belongs to the agreement
+    if (String(image.event_id) !== String(req.params.id)) {
+      res.status(403).json({ message: "Imagen no pertenece a este convenio" });
+      return;
+    }
+    await deleteObjectFromGCS(image.url);
+    await image.destroy();
+    res.status(200).json({ message: "Imagen eliminada" });
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const getEventsGalleries = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const events = await Event.findAll({
+      where: {
+        status: "inactive",
+      },
+      attributes: ["id", "name", "thumbnail"],
+      include: [
+        {
+          model: EventImage,
+          as: "event_images",
+          attributes: ["id", "event_id", "url"]
+        },
+      ],
+    });
+
+    res.json(events);
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
   }
 };
