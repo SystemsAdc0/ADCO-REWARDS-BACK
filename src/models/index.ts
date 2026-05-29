@@ -13,6 +13,10 @@ import ActivityQuestion from "./ActivityQuestion";
 import ActivityAnswer from "./ActivityAnswer";
 import DuelComment from "./DuelComment";
 import PlatformUpdate from "./PlatformUpdate";
+import EventRegistration from "./EventRegistration";
+import Event from "./Event";
+import LocationImage from "./LocationImage";
+import EventImage from "./EventImage";
 // User associations
 User.hasMany(Redemption, { foreignKey: "user_id", as: "redemptions" });
 User.hasMany(PointHistory, { foreignKey: "user_id", as: "pointHistory" });
@@ -101,6 +105,42 @@ User.hasMany(DuelComment, { foreignKey: "user_id", as: "duelComments" });
 // PlatformUpdate associations
 PlatformUpdate.belongsTo(User, { foreignKey: "sent_by", as: "sender" });
 User.hasMany(PlatformUpdate, { foreignKey: "sent_by", as: "platformUpdates" });
+
+// Event
+Event.hasMany(EventRegistration, {
+  foreignKey: "event_id",
+  as: "registrations",
+});
+
+Event.hasMany(LocationImage, {
+  foreignKey: "event_id",
+  as: "location_images",
+});
+
+EventRegistration.belongsTo(Event, {
+  foreignKey: "event_id",
+  as: "event",
+});
+
+EventRegistration.belongsTo(User, {
+  foreignKey: "user_id",
+  as: "user",
+});
+
+LocationImage.belongsTo(Event, {
+  foreignKey: "event_id",
+  as: "event",
+});
+
+EventImage.belongsTo(Event, {
+  foreignKey: "event_id",
+  as: "event",
+});
+
+Event.hasMany(EventImage, {
+  foreignKey: "event_id",
+  as: "event_images",
+});
 
 export {
   User,
