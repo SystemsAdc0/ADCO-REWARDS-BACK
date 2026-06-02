@@ -39,9 +39,9 @@ export const sendUpdate = async (
     });
 
     const fullMessage = `📢 ${String(title).trim()}: ${String(message).trim()}`;
-    users.map(
-      async (u) => await createNotification(u.id, fullMessage, "success"),
-    );
+    users.forEach((u, i) => {
+      setTimeout(() => createNotification(u.id, fullMessage, "success"), i * 3000);
+    });
 
     res.status(201).json({ update, notified: users.length });
   } catch (err) {

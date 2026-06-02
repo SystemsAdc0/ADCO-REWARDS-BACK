@@ -323,11 +323,9 @@ export const cancelEvent = async (
 
     // Crear notificaciones
     if (users.length > 0) {
-      await Promise.all(
-        users.map((user: User) =>
-          createNotification(user.id, message, "warning"),
-        ),
-      );
+      users.forEach((u: User, i) => {
+        setTimeout(() => createNotification(u.id, message, "warning"), i * 3000);
+      });
     }
 
     // Eliminar registros del evento
@@ -593,7 +591,7 @@ export const getEventsGalleries = async (
         {
           model: EventImage,
           as: "event_images",
-          attributes: ["id", "event_id", "url"]
+          attributes: ["id", "event_id", "url"],
         },
       ],
     });
