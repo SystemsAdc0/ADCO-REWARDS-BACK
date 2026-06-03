@@ -56,8 +56,8 @@ export const updateUser = async (
       res.status(404).json({ message: "Usuario no encontrado" });
       return;
     }
-    const { name, email, role, status } = req.body;
-    await user.update({ name, email, role, status });
+    const { name, email, role, status, birth_date, company } = req.body;
+    await user.update({ name, email, role, status, birth_date, company });
     res.json({
       message: "Usuario actualizado",
       user: {
@@ -66,6 +66,8 @@ export const updateUser = async (
         email: user.email,
         role: user.role,
         status: user.status,
+        birth_date: user.birth_date,
+        company: user.company,
       },
     });
   } catch (err) {
