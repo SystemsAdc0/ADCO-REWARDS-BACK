@@ -10,6 +10,7 @@ import { authenticate } from "../middlewares/authenticate";
 import { authorize } from "../middlewares/authorize";
 import { upload, uploadMemory } from "../middlewares/upload";
 import { prizeCloud } from "../controllers/googleCloudController";
+import { optionalAuth } from "../middlewares/optionalAuth";
 
 const router = Router();
 
@@ -23,7 +24,7 @@ const router = Router();
  *     responses:
  *       200: { description: Lista de premios }
  */
-router.get("/", getPrizes);
+router.get("/", optionalAuth, getPrizes);
 router.get("/:id", getPrizeById);
 
 /**

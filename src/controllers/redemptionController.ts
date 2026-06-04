@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { AuthRequest, AuthRequestFile, RedemptionStatus } from "../types";
-import { Redemption, Prize, User, PointHistory } from "../models";
+import { Redemption, Prize, User, PointHistory, State } from "../models";
 import { createNotification } from "../services/notificationService";
 import { Op, Sequelize } from "sequelize";
 
@@ -10,9 +10,17 @@ export const createRedemption = async (
 ): Promise<void> => {
   try {
     const userId = req.user!.id;
+    const userStateId = req.user?.state_id;
     const { prize_id } = req.body;
 
-    const prize = await Prize.findByPk(prize_id);
+    const prize = await Prize.findByPk(prize_id, {
+      include: {
+        model: State,
+        as: "states",
+        through: { attributes: [] },
+        required: false,
+      },
+    });
 
     if (!prize || prize.status !== "active") {
       res.status(404).json({ message: "Premio no disponible" });
@@ -21,6 +29,23 @@ export const createRedemption = async (
 
     if (prize.stock <= 0) {
       res.status(400).json({ message: "Sin stock disponible" });
+      return;
+    }
+
+    const prizeStates = prize.get("states") as State[];
+
+    const isGlobalPrize = prizeStates.length === 0;
+
+    // Premio restringido a estados
+
+    const isAvailableForUser =
+      isGlobalPrize ||
+      (userStateId && prizeStates.some((state) => state.id === userStateId));
+
+    if (!isAvailableForUser) {
+      res.status(403).json({
+        message: "Este premio no está disponible en tu estado.",
+      });
       return;
     }
 

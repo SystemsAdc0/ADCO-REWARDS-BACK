@@ -17,6 +17,9 @@ import EventRegistration from "./EventRegistration";
 import Event from "./Event";
 import LocationImage from "./LocationImage";
 import EventImage from "./EventImage";
+import State from "./State";
+import ProductState from "./PrizeState";
+import PrizeState from "./PrizeState";
 // User associations
 User.hasMany(Redemption, { foreignKey: "user_id", as: "redemptions" });
 User.hasMany(PointHistory, { foreignKey: "user_id", as: "pointHistory" });
@@ -142,6 +145,30 @@ Event.hasMany(EventImage, {
   as: "event_images",
 });
 
+// States
+User.belongsTo(State, {
+  foreignKey: "state_id",
+  as: "state",
+});
+State.hasMany(User, {
+  foreignKey: "state_id",
+  as: "users",
+});
+
+Prize.belongsToMany(State, {
+  through: PrizeState,
+  foreignKey: "prize_id",
+  otherKey: "state_id",
+  as: "states",
+});
+
+State.belongsToMany(Prize, {
+  through: PrizeState,
+  foreignKey: "state_id",
+  otherKey: "prize_id",
+  as: "prizes",
+});
+
 export {
   User,
   Prize,
@@ -153,4 +180,9 @@ export {
   Agreement,
   AgreementImage,
   PointRequest,
+  Event,
+  EventImage,
+  EventRegistration,
+  LocationImage,
+  State
 };

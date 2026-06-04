@@ -25,6 +25,7 @@ import pointRequests from "./routes/pointRequests";
 import duelComments from "./routes/duelComments";
 import updates from "./routes/updates";
 import eventRoutes from "./routes/events";
+import stateRoutes from "./routes/states";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -99,6 +100,7 @@ app.use("/api/agreements", agreements);
 app.use("/api/point-requests", pointRequests);
 app.use("/api/duel-comments", duelComments);
 app.use("/api/events", eventRoutes);
+app.use("/api/states", stateRoutes);
 app.use("/api/updates", updates);
 // Health check
 app.get("/health", (_req, res) =>
