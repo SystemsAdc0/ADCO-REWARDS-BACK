@@ -165,17 +165,18 @@ export const createPrize = async (
       );
     }
 
-    const users = await User.findAll({
-      where: { status: "active" },
-      attributes: ["id"],
-      raw: true,
-    });
+    for (let s of state_ids) {
+      const users = await User.findAll({
+        where: { status: "active", state_id: s },
+        attributes: ["id"],
+        raw: true,
+      });
 
-    const message = `Se acaba de agregar un nuevo premio: ${name?.trim().toUpperCase()}, participa para ganar!`;
-
-    await Promise.all(
-      users.map((u) => createNotification(u.id, message, "info")),
-    );
+      const message = `Se acaba de agregar un nuevo premio: ${name?.trim().toUpperCase()}, participa para ganar!`;
+      await Promise.all(
+        users.map((u) => createNotification(u.id, message, "info")),
+      );
+    }
 
     res.status(201).json(prize);
   } catch (err) {
