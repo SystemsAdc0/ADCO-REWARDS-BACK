@@ -19,7 +19,15 @@ export const getPrizes = async (
     const isAdmin = req.user?.role === "admin";
     const userStateId = req.user?.state_id;
 
-    if (req.user && !isAdmin && userStateId) {
+    if (req.user && !isAdmin) {
+      if (!userStateId) {
+        res.status(403).json({
+          message:
+            "No tienes una ubicación asignada. Comunícate con un administrador para más información.",
+        });
+        return;
+      }
+
       const state = await State.findByPk(userStateId);
 
       if (!state || state.status === "inactive") {
@@ -29,22 +37,16 @@ export const getPrizes = async (
         });
         return;
       }
-    }
 
-    // Usuario autenticado normal
-    if (req.user && !isAdmin) {
-      const conditions = [
-        Sequelize.literal(`
-      NOT EXISTS (
-        SELECT 1
-        FROM prizes_states ps
-        WHERE ps.prize_id = Prize.id
-      )
-    `),
-      ];
-
-      if (userStateId) {
-        conditions.push(
+      Object.assign(where, {
+        [Op.or]: [
+          Sequelize.literal(`
+        NOT EXISTS (
+          SELECT 1
+          FROM prizes_states ps
+          WHERE ps.prize_id = Prize.id
+        )
+      `),
           Sequelize.literal(`
         EXISTS (
           SELECT 1
@@ -53,14 +55,10 @@ export const getPrizes = async (
             ON s.id = ps.state_id
           WHERE ps.prize_id = Prize.id
             AND s.status = 'active'
-            ${userStateId ? `AND ps.state_id = ${userStateId}` : ""}
+            AND ps.state_id = ${userStateId}
         )
       `),
-        );
-      }
-
-      Object.assign(where, {
-        [Op.or]: conditions,
+        ],
       });
     }
 
