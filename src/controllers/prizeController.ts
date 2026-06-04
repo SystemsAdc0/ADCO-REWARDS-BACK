@@ -173,9 +173,9 @@ export const createPrize = async (
       });
 
       const message = `Se acaba de agregar un nuevo premio: ${name?.trim().toUpperCase()}, participa para ganar!`;
-      await Promise.all(
-        users.map((u) => createNotification(u.id, message, "info")),
-      );
+      users.forEach((u, i) => {
+        setTimeout(() => createNotification(u.id, message, "info"), i * 3000);
+      });
     }
 
     res.status(201).json(prize);
