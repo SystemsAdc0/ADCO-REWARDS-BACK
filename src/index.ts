@@ -46,6 +46,7 @@ const authLimiter = rateLimit({
 });
 
 // Middlewares globales
+app.set("trust proxy", 1);
 app.use(
   cors({
     origin: process.env.ORIGIN,
