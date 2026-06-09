@@ -129,6 +129,8 @@ export const getWinners = async (
           attributes: [],
         },
       ],
+      order: [["id", "DESC"]],
+      limit: 5,
       raw: true,
     });
     res.status(200).json(redemptions);
