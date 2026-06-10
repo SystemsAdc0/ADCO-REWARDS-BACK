@@ -131,35 +131,47 @@ export const getActivities = async (
         },
       },
     );
-
     const activities = await Activity.findAll({
       attributes: {
         include: [
           [
-            Sequelize.literal(
-              `EXISTS (
-            SELECT 1 
-            FROM activity_entries ae 
-            WHERE ae.activity_id = Activity.id 
-              AND ae.user_id = ${user.id} 
+            Sequelize.literal(`
+          EXISTS (
+            SELECT 1
+            FROM activity_entries ae
+            WHERE ae.activity_id = Activity.id
+              AND ae.user_id = ${user.id}
               AND ae.status != 'rejected'
-          )`,
-            ),
+          )
+        `),
             "participate",
           ],
           [
-            Sequelize.literal(
-              `(
-            SELECT ae.review_notes 
-            FROM activity_entries ae 
-            WHERE ae.activity_id = Activity.id 
-              AND ae.user_id = ${user.id} 
-              AND ae.status = 'rejected' 
-            ORDER BY ae.updated_at DESC 
+            Sequelize.literal(`
+          (
+            SELECT ae.review_notes
+            FROM activity_entries ae
+            WHERE ae.activity_id = Activity.id
+              AND ae.user_id = ${user.id}
+              AND ae.status = 'rejected'
+            ORDER BY ae.updated_at DESC
             LIMIT 1
-          )`,
-            ),
+          )
+        `),
             "note",
+          ],
+          [
+            Sequelize.literal(`
+          (
+            SELECT ae.status
+            FROM activity_entries ae
+            WHERE ae.activity_id = Activity.id
+              AND ae.user_id = ${user.id}
+            ORDER BY ae.updated_at DESC
+            LIMIT 1
+          )
+        `),
+            "entry_status",
           ],
         ],
       },
@@ -793,7 +805,7 @@ export const reviewAnswer = async (
       return;
     }
 
-    // Verificar que no se hayan otorgado los puntos ya 
+    // Verificar que no se hayan otorgado los puntos ya
     const alreadyAwarded = await PointHistory.findOne({
       where: {
         user_id: answer.user_id,
@@ -899,15 +911,13 @@ export const revertEntry = async (
     try {
       if (allQuestions.length > 0) {
         // Rechazar respuestas si la actividad tiene preguntas
-        await ActivityAnswer.destroy(
-          {
-            where: {
-              activity_question_id: { [Op.in]: allQuestions.map((q) => q.id) },
-              user_id: user.id,
-            },
-            transaction: t,
+        await ActivityAnswer.destroy({
+          where: {
+            activity_question_id: { [Op.in]: allQuestions.map((q) => q.id) },
+            user_id: user.id,
           },
-        );
+          transaction: t,
+        });
       }
 
       // Quitar puntos del usuario
