@@ -7,6 +7,7 @@ import {
   Redemption,
   Activity,
   Prize,
+  State,
 } from "../models";
 import { createNotification } from "../services/notificationService";
 import bcrypt from "bcryptjs";
@@ -19,6 +20,12 @@ export const getUsers = async (
 ): Promise<void> => {
   try {
     const users = await User.findAll({
+      include: [
+        {
+          model: State,
+          as: "state",
+        },
+      ],
       attributes: { exclude: ["password"] },
       order: [["id", "DESC"]],
     });
@@ -34,6 +41,12 @@ export const getUserById = async (
 ): Promise<void> => {
   try {
     const user = await User.findByPk(String(req.params.id), {
+      include: [
+        {
+          model: State,
+          as: "state",
+        },
+      ],
       attributes: { exclude: ["password"] },
     });
     if (!user) {
@@ -56,8 +69,19 @@ export const updateUser = async (
       res.status(404).json({ message: "Usuario no encontrado" });
       return;
     }
-    const { name, email, role, status, birth_date, company } = req.body;
-    await user.update({ name, email, role, status, birth_date, company });
+
+    const { name, email, role, status, state_id, company, birth_date } =
+      req.body;
+
+    await user.update({
+      name,
+      email,
+      role,
+      status,
+      state_id,
+      company,
+      birth_date,
+    });
     res.json({
       message: "Usuario actualizado",
       user: {
@@ -240,13 +264,15 @@ export const getBirthdaysThisMonth = async (
       avatar: string;
       birth_date: string;
       company: string | null;
+      state: string | null;
     }>(
-      `SELECT id, name, avatar, birth_date, company
-       FROM users
-       WHERE status = 'active'
-         AND birth_date IS NOT NULL
-         AND MONTH(birth_date) = :month
-       ORDER BY DAY(birth_date) ASC`,
+      `SELECT u.id, u.name, u.avatar, u.birth_date, u.company, s.name AS state
+       FROM users u
+       LEFT JOIN states s ON s.id = u.state_id
+       WHERE u.status = 'active'
+         AND u.birth_date IS NOT NULL
+         AND MONTH(u.birth_date) = :month
+       ORDER BY DAY(u.birth_date) ASC`,
       { type: QueryTypes.SELECT, replacements: { month: currentMonth } },
     );
     res.json(users);

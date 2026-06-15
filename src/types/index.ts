@@ -6,6 +6,7 @@ export interface JwtPayload {
   id: number;
   email: string;
   role: UserRole;
+  state_id: number;
 }
 
 export interface AuthRequest extends Request {
@@ -31,6 +32,7 @@ export type ActivityEntryStatus = "pending" | "approved" | "rejected";
 export type ActivityStatus = "active" | "inactive" | "finished";
 export type PrizeStatus = "active" | "inactive";
 export type UserStatus = "active" | "inactive";
+export type StateStatus = "active" | "inactive";
 export type ActivityAnswerStatus = "pending" | "approved" | "rejected";
 export type EventCategory =
   | "informative"
