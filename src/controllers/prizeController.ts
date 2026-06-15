@@ -171,6 +171,7 @@ export const createPrize = async (
         attributes: ["id"],
         raw: true,
       });
+      
 
       const message = `Se acaba de agregar un nuevo premio: ${name?.trim().toUpperCase()}, participa para ganar!`;
       users.forEach((u, i) => {
