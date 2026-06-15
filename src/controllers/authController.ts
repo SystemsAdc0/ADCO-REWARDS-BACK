@@ -146,7 +146,14 @@ export const me = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const user = await User.findByPk(req.user!.id, {
       attributes: { exclude: ["password"] },
+      include: {
+        model: State,
+        as: "state",
+        attributes: ["name", "status"],
+      },
     });
+
+    
     if (!user) {
       res.status(404).json({ message: "Usuario no encontrado" });
       return;
