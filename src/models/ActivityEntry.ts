@@ -10,13 +10,14 @@ interface ActivityEntryAttributes {
   reviewed_by?: number;
   review_notes?: string;
   file: string;
+  archived_at?: Date | null;
   created_at?: Date;
   updated_at?: Date;
 }
 
 interface ActivityEntryCreationAttributes extends Optional<
   ActivityEntryAttributes,
-  "id" | "status" | "reviewed_by" | "review_notes"
+  "id" | "status" | "reviewed_by" | "review_notes" | "archived_at"
 > {}
 
 class ActivityEntry
@@ -30,6 +31,7 @@ class ActivityEntry
   public reviewed_by?: number;
   public review_notes?: string;
   public file!: string;
+  public archived_at?: Date | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -50,6 +52,11 @@ ActivityEntry.init(
     file: { type: DataTypes.TEXT, allowNull: false },
     reviewed_by: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
     review_notes: { type: DataTypes.TEXT, allowNull: true },
+    archived_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+    },
   },
   {
     sequelize,

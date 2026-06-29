@@ -35,6 +35,7 @@ export const getActivitiesAdmin = async (
       {
         where: {
           status: "active",
+          archived_at: null,
           [Op.and]: Sequelize.literal(
             "CONVERT_TZ(NOW(), 'UTC', time_zone) >= end_date",
           ),
@@ -43,16 +44,18 @@ export const getActivitiesAdmin = async (
     );
 
     const activities = await Activity.findAll({
+      where: { archived_at: null },
       attributes: {
         include: [
           [
             Sequelize.literal(
               `EXISTS (
-            SELECT 1 
-            FROM activity_entries ae 
-            WHERE ae.activity_id = Activity.id 
-              AND ae.user_id = ${user.id} 
+            SELECT 1
+            FROM activity_entries ae
+            WHERE ae.activity_id = Activity.id
+              AND ae.user_id = ${user.id}
               AND ae.status != 'rejected'
+              AND ae.archived_at IS NULL
           )`,
             ),
             "participate",
@@ -60,12 +63,13 @@ export const getActivitiesAdmin = async (
           [
             Sequelize.literal(
               `(
-            SELECT ae.review_notes 
-            FROM activity_entries ae 
-            WHERE ae.activity_id = Activity.id 
-              AND ae.user_id = ${user.id} 
-              AND ae.status = 'rejected' 
-            ORDER BY ae.updated_at DESC 
+            SELECT ae.review_notes
+            FROM activity_entries ae
+            WHERE ae.activity_id = Activity.id
+              AND ae.user_id = ${user.id}
+              AND ae.status = 'rejected'
+              AND ae.archived_at IS NULL
+            ORDER BY ae.updated_at DESC
             LIMIT 1
           )`,
             ),
@@ -89,7 +93,7 @@ export const getActivitiesAdmin = async (
               model: ActivityAnswer,
               as: "answers",
               attributes: ["id", "answer", "status"],
-              where: { user_id: user.id },
+              where: { user_id: user.id, archived_at: null },
               required: false,
             },
           ],
@@ -125,6 +129,7 @@ export const getActivities = async (
       {
         where: {
           status: "active",
+          archived_at: null,
           [Op.and]: Sequelize.literal(
             "CONVERT_TZ(NOW(), 'UTC', time_zone) >= end_date",
           ),
@@ -132,6 +137,7 @@ export const getActivities = async (
       },
     );
     const activities = await Activity.findAll({
+      where: { archived_at: null },
       attributes: {
         include: [
           [
@@ -142,6 +148,7 @@ export const getActivities = async (
             WHERE ae.activity_id = Activity.id
               AND ae.user_id = ${user.id}
               AND ae.status != 'rejected'
+              AND ae.archived_at IS NULL
           )
         `),
             "participate",
@@ -154,6 +161,7 @@ export const getActivities = async (
             WHERE ae.activity_id = Activity.id
               AND ae.user_id = ${user.id}
               AND ae.status = 'rejected'
+              AND ae.archived_at IS NULL
             ORDER BY ae.updated_at DESC
             LIMIT 1
           )
@@ -167,6 +175,7 @@ export const getActivities = async (
             FROM activity_entries ae
             WHERE ae.activity_id = Activity.id
               AND ae.user_id = ${user.id}
+              AND ae.archived_at IS NULL
             ORDER BY ae.updated_at DESC
             LIMIT 1
           )
@@ -191,7 +200,7 @@ export const getActivities = async (
               model: ActivityAnswer,
               as: "answers",
               attributes: ["id", "answer", "status"],
-              where: { user_id: user.id },
+              where: { user_id: user.id, archived_at: null },
               required: false,
             },
           ],
@@ -214,7 +223,7 @@ export const getActivitiesPublic = async (
 ): Promise<void> => {
   try {
     const activities = await Activity.findAll({
-      where: { status: "active" },
+      where: { status: "active", archived_at: null },
       order: [["start_date", "ASC"]],
     });
     res.json(activities);
@@ -393,6 +402,7 @@ export const joinActivity = async (
       where: {
         user_id: userId,
         activity_id: activityId,
+        archived_at: null,
       },
     });
 
@@ -487,6 +497,7 @@ export const getEntries = async (
   try {
     const isAdmin = req.user?.role === "admin";
     const entries = await ActivityEntry.findAll({
+      where: { archived_at: null },
       attributes: [
         "id",
         "user_id",
@@ -541,7 +552,11 @@ export const getEntries = async (
 
     if (allQuestionIds.length > 0) {
       const answers = await ActivityAnswer.findAll({
-        where: { activity_question_id: allQuestionIds, user_id: allUserIds },
+        where: {
+          activity_question_id: allQuestionIds,
+          user_id: allUserIds,
+          archived_at: null,
+        },
         attributes: [
           "id",
           "answer",
@@ -845,6 +860,95 @@ export const reviewAnswer = async (
     }
 
     res.json(answer);
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const archiveAllActivities = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  const t = await sequelize.transaction();
+  try {
+    const now = new Date();
+
+    const [activitiesAffected] = await Activity.update(
+      { archived_at: now },
+      { where: { archived_at: null }, transaction: t },
+    );
+    const [entriesAffected] = await ActivityEntry.update(
+      { archived_at: now },
+      { where: { archived_at: null }, transaction: t },
+    );
+    const [answersAffected] = await ActivityAnswer.update(
+      { archived_at: now },
+      { where: { archived_at: null }, transaction: t },
+    );
+
+    await t.commit();
+
+    res.json({
+      message: "Actividades y participaciones archivadas",
+      archived_at: now,
+      activities: activitiesAffected,
+      entries: entriesAffected,
+      answers: answersAffected,
+    });
+  } catch (err) {
+    await t.rollback();
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const getArchivedActivities = async (
+  _req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const activities = await Activity.findAll({
+      where: { archived_at: { [Op.ne]: null } },
+      include: [
+        { model: SocialMedia, as: "social_medias", attributes: ["name"] },
+        {
+          model: ActivityQuestion,
+          as: "questions",
+          attributes: ["id", "question"],
+          required: false,
+        },
+      ],
+      order: [["archived_at", "DESC"], ["id", "DESC"]],
+    });
+    res.json(activities);
+  } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const getArchivedEntries = async (
+  _req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const entries = await ActivityEntry.findAll({
+      where: { archived_at: { [Op.ne]: null } },
+      include: [
+        { model: User, as: "user", attributes: ["id", "name", "email"] },
+        {
+          model: Activity,
+          as: "activity",
+          attributes: ["id", "name", "points_reward"],
+        },
+        {
+          model: User,
+          as: "reviewer",
+          attributes: ["id", "name", "avatar"],
+          required: false,
+        },
+      ],
+      order: [["archived_at", "DESC"], ["id", "DESC"]],
+    });
+    res.json(entries);
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
   }

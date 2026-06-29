@@ -5,7 +5,7 @@ import {
   eventUpload,
   getActivityFile,
   googleActivityEntries,
-  redemptionsUpload,
+  redemptionsUpload, 
 } from "../controllers/googleCloudController";
 import { uploadMemory } from "../middlewares/upload";
 

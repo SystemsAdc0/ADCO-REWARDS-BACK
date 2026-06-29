@@ -206,7 +206,7 @@ export const getUserFullHistory = async (
         include: [{ model: User, as: "assigner", attributes: ["id", "name"] }],
       }),
       ActivityEntry.findAll({
-        where: { user_id: userId },
+        where: { user_id: userId, archived_at: null },
         order: [["created_at", "DESC"]],
         include: [
           {

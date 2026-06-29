@@ -8,13 +8,14 @@ interface ActivityAnswerAttributes {
   user_id: number;
   answer: string;
   status: ActivityAnswerStatus;
+  archived_at?: Date | null;
   created_at?: Date;
   updated_at?: Date;
 }
 
 interface ActivityAnswerCreationAttributes extends Optional<
   ActivityAnswerAttributes,
-  "id"
+  "id" | "archived_at"
 > {}
 
 class ActivityAnswer
@@ -26,6 +27,7 @@ class ActivityAnswer
   public user_id!: number;
   public answer!: string;
   public status!: ActivityAnswerStatus;
+  public archived_at?: Date | null;
   public readonly created_at?: Date;
   public readonly updated_at?: Date;
 }
@@ -53,6 +55,11 @@ ActivityAnswer.init(
       type: DataTypes.ENUM("pending", "approved", "rejected"),
       allowNull: false,
       defaultValue: "pending",
+    },
+    archived_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
     },
   },
   {

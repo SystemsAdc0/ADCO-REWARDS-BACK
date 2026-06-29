@@ -12,6 +12,9 @@ import {
   updateAnswer,
   reviewAnswer,
   revertEntry,
+  archiveAllActivities,
+  getArchivedActivities,
+  getArchivedEntries,
 } from "../controllers/activityController";
 import { authenticate } from "../middlewares/authenticate";
 import { authorize } from "../middlewares/authorize";
@@ -70,5 +73,24 @@ router.put(
   reviewEntry,
 );
 router.put("/entries/revert", authenticate, authorize("admin"), revertEntry)
+
+router.post(
+  "/admin/archive-all",
+  authenticate,
+  authorize("admin"),
+  archiveAllActivities,
+);
+router.get(
+  "/archived",
+  authenticate,
+  authorize("admin"),
+  getArchivedActivities,
+);
+router.get(
+  "/entries/archived",
+  authenticate,
+  authorize("admin"),
+  getArchivedEntries,
+);
 
 export default router;

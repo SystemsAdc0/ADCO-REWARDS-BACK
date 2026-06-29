@@ -19,7 +19,7 @@ export const getSummary = async (
     const totalPrizes = await Prize.count({ where: { status: "active" } });
     const totalRedemptions = await Redemption.count();
     const pendingEntries = await ActivityEntry.count({
-      where: { status: "pending" },
+      where: { status: "pending", archived_at: null },
     });
     const pendingRedemptions = await Redemption.count({
       where: { status: "pending" },
@@ -79,7 +79,7 @@ export const getPendingCounts = async (
 
     if (role === "admin" || role === "moderator") {
       pendingEntries = await ActivityEntry.count({
-        where: { status: "pending" },
+        where: { status: "pending", archived_at: null },
       });
       pendingRedemptions = await Redemption.count({
         where: { status: "pending" },
@@ -120,7 +120,10 @@ export const getTopParticipants = async (
        FROM activity_entries ae
        JOIN users u ON ae.user_id = u.id
        JOIN activities a ON ae.activity_id = a.id
-       WHERE u.role IN ('user', 'moderator') AND a.counts_for_travel = 1
+       WHERE u.role IN ('user', 'moderator')
+         AND a.counts_for_travel = 1
+         AND a.archived_at IS NULL
+         AND ae.archived_at IS NULL
        GROUP BY u.id, u.name, u.email, u.avatar
        ORDER BY approved DESC, total_participations DESC
        LIMIT 20`,
@@ -139,7 +142,7 @@ export const getParticipationsRanking = async (
   try {
     const [totalActivities, ranking] = await Promise.all([
       sequelize.query<{ total: number }>(
-        `SELECT COUNT(*) as total FROM activities WHERE counts_for_travel = 1`,
+        `SELECT COUNT(*) as total FROM activities WHERE counts_for_travel = 1 AND archived_at IS NULL`,
         { type: QueryTypes.SELECT },
       ),
       sequelize.query<{
@@ -156,7 +159,10 @@ export const getParticipationsRanking = async (
          FROM activity_entries ae
          JOIN users u ON ae.user_id = u.id
          JOIN activities a ON ae.activity_id = a.id
-         WHERE u.role IN ('user', 'moderator') AND a.counts_for_travel = 1
+         WHERE u.role IN ('user', 'moderator')
+           AND a.counts_for_travel = 1
+           AND a.archived_at IS NULL
+           AND ae.archived_at IS NULL
          GROUP BY u.id, u.name, u.avatar
          ORDER BY participations DESC
          LIMIT 10`,
@@ -178,7 +184,7 @@ export const isTopParticipant = async (
 
     const [totalRow, userRow] = await Promise.all([
       sequelize.query<{ total: number }>(
-        `SELECT COUNT(*) as total FROM activities WHERE counts_for_travel = 1`,
+        `SELECT COUNT(*) as total FROM activities WHERE counts_for_travel = 1 AND archived_at IS NULL`,
         { type: QueryTypes.SELECT },
       ),
       sequelize.query<{ approved: number }>(
@@ -187,6 +193,8 @@ export const isTopParticipant = async (
          JOIN activities a ON ae.activity_id = a.id
          WHERE ae.user_id = :userId
            AND a.counts_for_travel = 1
+           AND a.archived_at IS NULL
+           AND ae.archived_at IS NULL
            AND ae.status = 'approved'`,
         { type: QueryTypes.SELECT, replacements: { userId } },
       ),
@@ -216,8 +224,8 @@ export const getUserMissingActivities = async (
       `SELECT a.id, a.name
        FROM activities a
        LEFT JOIN activity_entries ae
-         ON ae.activity_id = a.id AND ae.user_id = ? AND ae.status = 'approved'
-       WHERE a.counts_for_travel = 1 AND ae.id IS NULL
+         ON ae.activity_id = a.id AND ae.user_id = ? AND ae.status = 'approved' AND ae.archived_at IS NULL
+       WHERE a.counts_for_travel = 1 AND a.archived_at IS NULL AND ae.id IS NULL
        ORDER BY a.name ASC`,
       { type: QueryTypes.SELECT, replacements: [userId] },
     );
