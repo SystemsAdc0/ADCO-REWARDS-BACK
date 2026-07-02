@@ -8,7 +8,7 @@ import {
   Redemption,
 } from "../models";
 import { createNotification } from "../services/notificationService";
-import { Sequelize, Op } from "sequelize";
+import { Sequelize, Op, QueryTypes } from "sequelize";
 import SocialMedia from "../models/SocialMedia";
 import { deleteActivityEntryFile } from "./googleCloudController";
 import ActivityQuestion from "../models/ActivityQuestion";
@@ -872,17 +872,27 @@ export const archiveAllActivities = async (
   const t = await sequelize.transaction();
   try {
     const now = new Date();
+    const rawLabel =
+      typeof req.body?.label === "string" ? req.body.label.trim() : "";
+    const label =
+      rawLabel.length > 0
+        ? rawLabel.slice(0, 150)
+        : `Reinicio ${now.toLocaleDateString("es-MX", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          })}`;
 
     const [activitiesAffected] = await Activity.update(
-      { archived_at: now },
+      { archived_at: now, archive_label: label },
       { where: { archived_at: null }, transaction: t },
     );
     const [entriesAffected] = await ActivityEntry.update(
-      { archived_at: now },
+      { archived_at: now, archive_label: label },
       { where: { archived_at: null }, transaction: t },
     );
     const [answersAffected] = await ActivityAnswer.update(
-      { archived_at: now },
+      { archived_at: now, archive_label: label },
       { where: { archived_at: null }, transaction: t },
     );
 
@@ -891,6 +901,7 @@ export const archiveAllActivities = async (
     res.json({
       message: "Actividades y participaciones archivadas",
       archived_at: now,
+      archive_label: label,
       activities: activitiesAffected,
       entries: entriesAffected,
       answers: answersAffected,
@@ -901,13 +912,21 @@ export const archiveAllActivities = async (
   }
 };
 
+const buildArchiveFilter = (req: AuthRequest) => {
+  const batch = req.query?.batch as string | undefined;
+  if (batch && !Number.isNaN(new Date(batch).getTime())) {
+    return { archived_at: new Date(batch) };
+  }
+  return { archived_at: { [Op.ne]: null } };
+};
+
 export const getArchivedActivities = async (
-  _req: AuthRequest,
+  req: AuthRequest,
   res: Response,
 ): Promise<void> => {
   try {
     const activities = await Activity.findAll({
-      where: { archived_at: { [Op.ne]: null } },
+      where: buildArchiveFilter(req),
       include: [
         { model: SocialMedia, as: "social_medias", attributes: ["name"] },
         {
@@ -926,12 +945,12 @@ export const getArchivedActivities = async (
 };
 
 export const getArchivedEntries = async (
-  _req: AuthRequest,
+  req: AuthRequest,
   res: Response,
 ): Promise<void> => {
   try {
     const entries = await ActivityEntry.findAll({
-      where: { archived_at: { [Op.ne]: null } },
+      where: buildArchiveFilter(req),
       include: [
         { model: User, as: "user", attributes: ["id", "name", "email"] },
         {
@@ -950,6 +969,60 @@ export const getArchivedEntries = async (
     });
     res.json(entries);
   } catch (err) {
+    res.status(500).json({ message: "Error", error: err });
+  }
+};
+
+export const getArchiveBatches = async (
+  _req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const rows = await sequelize.query<{
+      archived_at: string;
+      archive_label: string | null;
+      activities_count: number;
+      entries_count: number;
+      answers_count: number;
+    }>(
+      `SELECT
+         b.archived_at,
+         MAX(b.archive_label) as archive_label,
+         SUM(b.activities_count) as activities_count,
+         SUM(b.entries_count) as entries_count,
+         SUM(b.answers_count) as answers_count
+       FROM (
+         SELECT archived_at, archive_label,
+                COUNT(*) as activities_count, 0 as entries_count, 0 as answers_count
+         FROM activities WHERE archived_at IS NOT NULL
+         GROUP BY archived_at, archive_label
+         UNION ALL
+         SELECT archived_at, archive_label,
+                0 as activities_count, COUNT(*) as entries_count, 0 as answers_count
+         FROM activity_entries WHERE archived_at IS NOT NULL
+         GROUP BY archived_at, archive_label
+         UNION ALL
+         SELECT archived_at, archive_label,
+                0 as activities_count, 0 as entries_count, COUNT(*) as answers_count
+         FROM activity_answers WHERE archived_at IS NOT NULL
+         GROUP BY archived_at, archive_label
+       ) b
+       GROUP BY b.archived_at
+       ORDER BY b.archived_at DESC`,
+      { type: QueryTypes.SELECT },
+    );
+
+    res.json(
+      rows.map((r) => ({
+        archived_at: r.archived_at,
+        archive_label: r.archive_label,
+        activities_count: Number(r.activities_count) || 0,
+        entries_count: Number(r.entries_count) || 0,
+        answers_count: Number(r.answers_count) || 0,
+      })),
+    );
+  } catch (err) {
+    console.log(err);
     res.status(500).json({ message: "Error", error: err });
   }
 };

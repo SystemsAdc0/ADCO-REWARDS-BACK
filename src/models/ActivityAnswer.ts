@@ -9,13 +9,14 @@ interface ActivityAnswerAttributes {
   answer: string;
   status: ActivityAnswerStatus;
   archived_at?: Date | null;
+  archive_label?: string | null;
   created_at?: Date;
   updated_at?: Date;
 }
 
 interface ActivityAnswerCreationAttributes extends Optional<
   ActivityAnswerAttributes,
-  "id" | "archived_at"
+  "id" | "archived_at" | "archive_label"
 > {}
 
 class ActivityAnswer
@@ -28,6 +29,7 @@ class ActivityAnswer
   public answer!: string;
   public status!: ActivityAnswerStatus;
   public archived_at?: Date | null;
+  public archive_label?: string | null;
   public readonly created_at?: Date;
   public readonly updated_at?: Date;
 }
@@ -58,6 +60,11 @@ ActivityAnswer.init(
     },
     archived_at: {
       type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+    },
+    archive_label: {
+      type: DataTypes.STRING(150),
       allowNull: true,
       defaultValue: null,
     },

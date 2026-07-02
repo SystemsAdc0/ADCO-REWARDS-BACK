@@ -16,13 +16,14 @@ interface ActivityAttributes {
   image: string;
   counts_for_travel: boolean;
   archived_at?: Date | null;
+  archive_label?: string | null;
   created_at?: Date;
   updated_at?: Date;
 }
 
 interface ActivityCreationAttributes extends Optional<
   ActivityAttributes,
-  "id" | "status" | "counts_for_travel" | "time_zone" | "archived_at"
+  "id" | "status" | "counts_for_travel" | "time_zone" | "archived_at" | "archive_label"
 > {}
 
 class Activity
@@ -41,6 +42,7 @@ class Activity
   public status!: ActivityStatus;
   public counts_for_travel!: boolean;
   public archived_at?: Date | null;
+  public archive_label?: string | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -77,6 +79,11 @@ Activity.init(
     },
     archived_at: {
       type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+    },
+    archive_label: {
+      type: DataTypes.STRING(150),
       allowNull: true,
       defaultValue: null,
     },

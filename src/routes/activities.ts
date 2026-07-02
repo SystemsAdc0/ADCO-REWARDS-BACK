@@ -15,6 +15,7 @@ import {
   archiveAllActivities,
   getArchivedActivities,
   getArchivedEntries,
+  getArchiveBatches,
 } from "../controllers/activityController";
 import { authenticate } from "../middlewares/authenticate";
 import { authorize } from "../middlewares/authorize";
@@ -79,6 +80,12 @@ router.post(
   authenticate,
   authorize("admin"),
   archiveAllActivities,
+);
+router.get(
+  "/archived/batches",
+  authenticate,
+  authorize("admin"),
+  getArchiveBatches,
 );
 router.get(
   "/archived",

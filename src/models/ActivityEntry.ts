@@ -11,13 +11,14 @@ interface ActivityEntryAttributes {
   review_notes?: string;
   file: string;
   archived_at?: Date | null;
+  archive_label?: string | null;
   created_at?: Date;
   updated_at?: Date;
 }
 
 interface ActivityEntryCreationAttributes extends Optional<
   ActivityEntryAttributes,
-  "id" | "status" | "reviewed_by" | "review_notes" | "archived_at"
+  "id" | "status" | "reviewed_by" | "review_notes" | "archived_at" | "archive_label"
 > {}
 
 class ActivityEntry
@@ -32,6 +33,7 @@ class ActivityEntry
   public review_notes?: string;
   public file!: string;
   public archived_at?: Date | null;
+  public archive_label?: string | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -54,6 +56,11 @@ ActivityEntry.init(
     review_notes: { type: DataTypes.TEXT, allowNull: true },
     archived_at: {
       type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+    },
+    archive_label: {
+      type: DataTypes.STRING(150),
       allowNull: true,
       defaultValue: null,
     },
