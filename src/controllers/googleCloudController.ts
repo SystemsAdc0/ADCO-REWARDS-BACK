@@ -264,6 +264,32 @@ export const getActivityFile = async (req: AuthRequest, res: Response) => {
 };
 
 /**
+ * Comprueba que un objeto de participación exista en el bucket privado y
+ * tenga tamaño > 0. Se usa antes de crear un ActivityEntry para evitar
+ * que se registren participaciones con archivos de 0 bytes cuando el PUT
+ * firmado falló o subió un cuerpo vacío desde el cliente.
+ */
+export const verifyActivityEntryFile = async (
+  objectName: string,
+): Promise<{ ok: true; size: number } | { ok: false; reason: string }> => {
+  if (!objectName || typeof objectName !== "string") {
+    return { ok: false, reason: "missing" };
+  }
+  try {
+    const [metadata] = await bucket.file(objectName).getMetadata();
+    const size = Number(metadata?.size ?? 0);
+    if (!Number.isFinite(size) || size <= 0) {
+      return { ok: false, reason: "empty" };
+    }
+    return { ok: true, size };
+  } catch (err: any) {
+    if (err?.code === 404) return { ok: false, reason: "not_found" };
+    console.error("verifyActivityEntryFile error:", err);
+    return { ok: false, reason: "error" };
+  }
+};
+
+/**
  * Elimina un archivo de activity_entries del bucket privado.
  * Se usa al rechazar una participación para liberar espacio y permitir re-envío.
  */

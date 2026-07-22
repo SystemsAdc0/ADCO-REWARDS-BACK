@@ -10,7 +10,10 @@ import {
 import { createNotification } from "../services/notificationService";
 import { Sequelize, Op, QueryTypes } from "sequelize";
 import SocialMedia from "../models/SocialMedia";
-import { deleteActivityEntryFile } from "./googleCloudController";
+import {
+  deleteActivityEntryFile,
+  verifyActivityEntryFile,
+} from "./googleCloudController";
 import ActivityQuestion from "../models/ActivityQuestion";
 import ActivityAnswer from "../models/ActivityAnswer";
 import sequelize from "../config/database";
@@ -398,6 +401,27 @@ export const joinActivity = async (
     const userId = req.user!.id;
     const activityId = parseInt(String(req.params.id));
     const { questions } = req.body;
+
+    // Bloquea participaciones cuyo archivo no se subió realmente al bucket.
+    // El PUT firmado puede fallar en silencio (blob invalidado en Safari
+    // móvil, conexión caída, tipo de contenido inválido) y crear objetos
+    // de 0 bytes; rechazamos antes de escribir en la BD.
+    const fileCheck = await verifyActivityEntryFile(String(req.body.file ?? ""));
+    if (!fileCheck.ok) {
+      // Limpia el 0-byte que quedó huérfano para no ensuciar el bucket
+      if (fileCheck.reason === "empty" && req.body.file) {
+        await deleteActivityEntryFile(String(req.body.file));
+      }
+      const message =
+        fileCheck.reason === "empty"
+          ? "El archivo se subió vacío. Vuelve a intentar."
+          : fileCheck.reason === "not_found"
+            ? "No se encontró el archivo subido. Vuelve a intentar."
+            : "Falta el archivo o no se pudo verificar. Vuelve a intentar.";
+      res.status(400).json({ message });
+      return;
+    }
+
     const activityExist = await ActivityEntry.findOne({
       where: {
         user_id: userId,
