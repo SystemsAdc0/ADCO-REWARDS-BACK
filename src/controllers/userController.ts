@@ -9,7 +9,6 @@ import {
   Prize,
   State,
 } from "../models";
-import { createNotification } from "../services/notificationService";
 import bcrypt from "bcryptjs";
 import sequelize from "../config/database";
 import { QueryTypes } from "sequelize";
@@ -152,23 +151,40 @@ export const addPoints = async (
       res.status(404).json({ message: "Usuario no encontrado" });
       return;
     }
-    const { points, description } = req.body;
-    await user.update({ points: user.points + points });
+    const rawPoints = Number(req.body?.points);
+    const { description } = req.body;
+
+    if (!Number.isFinite(rawPoints) || rawPoints === 0) {
+      res.status(400).json({
+        message: "La cantidad de puntos debe ser distinta de 0",
+      });
+      return;
+    }
+
+    const isDeduction = rawPoints < 0;
+    const newTotal = user.points + rawPoints;
+
+    if (isDeduction && newTotal < 0) {
+      res.status(400).json({
+        message: `El usuario solo tiene ${user.points} puntos disponibles`,
+      });
+      return;
+    }
+
+    await user.update({ points: newTotal });
     await PointHistory.create({
       user_id: user.id,
-      points,
+      points: rawPoints,
       action: "adjusted",
-      description: description || "Ajuste manual de puntos",
+      description:
+        description ||
+        (isDeduction ? "Ajuste manual (retiro)" : "Ajuste manual de puntos"),
       assigned_by: req.user!.id,
     });
-    await createNotification(
-      user.id,
-      `Se te han asignado ${points} puntos. ${description || ""}`,
-      "success",
-    );
+
     res.json({
-      message: "Puntos agregados",
-      total_points: user.points + points,
+      message: isDeduction ? "Puntos retirados" : "Puntos agregados",
+      total_points: newTotal,
     });
   } catch (err) {
     res.status(500).json({ message: "Error", error: err });
