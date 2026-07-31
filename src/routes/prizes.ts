@@ -25,7 +25,7 @@ const router = Router();
  *       200: { description: Lista de premios }
  */
 router.get("/", optionalAuth, getPrizes);
-router.get("/:id", getPrizeById);
+router.get("/:id", optionalAuth, getPrizeById);
 
 /**
  * @swagger

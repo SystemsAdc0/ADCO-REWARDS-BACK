@@ -3,15 +3,36 @@ import { AuthRequest, AuthRequestFile, RedemptionStatus } from "../types";
 import { Redemption, Prize, User, PointHistory, State } from "../models";
 import { createNotification } from "../services/notificationService";
 import { Op, Sequelize } from "sequelize";
+import sequelize from "../config/database";
 
 export const createRedemption = async (
   req: AuthRequest,
   res: Response,
 ): Promise<void> => {
+  const t = await sequelize.transaction();
   try {
     const userId = req.user!.id;
     const userStateId = req.user?.state_id;
     const { prize_id } = req.body;
+
+    if (!userStateId) {
+      await t.rollback();
+      res.status(403).json({
+        message:
+          "No tienes una ubicación asignada. Comunícate con un administrador.",
+      });
+      return;
+    }
+
+    const userState = await State.findByPk(userStateId, { transaction: t });
+    if (!userState || userState.status === "inactive") {
+      await t.rollback();
+      res.status(403).json({
+        message:
+          "Tu ubicación se encuentra deshabilitada. Comunícate con un administrador.",
+      });
+      return;
+    }
 
     const prize = await Prize.findByPk(prize_id, {
       include: {
@@ -20,79 +41,110 @@ export const createRedemption = async (
         through: { attributes: [] },
         required: false,
       },
+      lock: t.LOCK.UPDATE,
+      transaction: t,
     });
 
     if (!prize || prize.status !== "active") {
+      await t.rollback();
       res.status(404).json({ message: "Premio no disponible" });
       return;
     }
 
     if (prize.stock <= 0) {
+      await t.rollback();
       res.status(400).json({ message: "Sin stock disponible" });
       return;
     }
 
-    const prizeStates = prize.get("states") as State[];
-
+    const prizeStates = (prize.get("states") as State[]) ?? [];
     const isGlobalPrize = prizeStates.length === 0;
-
-    // Premio restringido a estados
 
     const isAvailableForUser =
       isGlobalPrize ||
-      (userStateId && prizeStates.some((state) => state.id === userStateId));
+      prizeStates.some(
+        (state) => state.id === userStateId && state.status === "active",
+      );
 
     if (!isAvailableForUser) {
+      await t.rollback();
       res.status(403).json({
         message: "Este premio no está disponible en tu estado.",
       });
       return;
     }
 
-    const user = await User.findByPk(userId);
+    const user = await User.findByPk(userId, {
+      lock: t.LOCK.UPDATE,
+      transaction: t,
+    });
 
-    if (!user || user.points < prize.points_required) {
+    if (!user || user.status === "inactive") {
+      await t.rollback();
+      res.status(403).json({ message: "Usuario no disponible" });
+      return;
+    }
+
+    if (user.points < prize.points_required) {
+      await t.rollback();
       res.status(400).json({ message: "Puntos insuficientes" });
       return;
     }
 
-    const redemptionExist = await Redemption.findOne({
-      where: {
-        user_id: userId,
-        prize_id,
-      },
-    });
-
-    if (redemptionExist && !prize.allow_multiple_redemptions) {
-      res.status(400).json({
-        message: "Este premio solo se puede canjear una vez por persona",
+    if (!prize.allow_multiple_redemptions) {
+      const redemptionExist = await Redemption.findOne({
+        where: {
+          user_id: userId,
+          prize_id,
+          status: { [Op.in]: ["pending", "approved", "delivered"] },
+        },
+        transaction: t,
       });
-      return;
+
+      if (redemptionExist) {
+        await t.rollback();
+        res.status(400).json({
+          message: "Este premio solo se puede canjear una vez por persona",
+        });
+        return;
+      }
     }
 
-    await user.update({
-      points: user.points - prize.points_required,
-    });
+    await user.update(
+      { points: user.points - prize.points_required },
+      { transaction: t },
+    );
 
     const newStock = prize.stock - 1;
 
-    await prize.update({
-      stock: newStock,
-      status: newStock <= 0 ? "inactive" : "active",
-    });
+    await prize.update(
+      {
+        stock: newStock,
+        status: newStock <= 0 ? "inactive" : "active",
+      },
+      { transaction: t },
+    );
 
-    const redemption = await Redemption.create({
-      user_id: userId,
-      prize_id,
-      points_spent: prize.points_required,
-    });
+    const redemption = await Redemption.create(
+      {
+        user_id: userId,
+        prize_id,
+        points_spent: prize.points_required,
+      },
+      { transaction: t },
+    );
 
-    await PointHistory.create({
-      user_id: userId,
-      points: -prize.points_required,
-      action: "spent",
-      description: `Canje: ${prize.name}`,
-    });
+    await PointHistory.create(
+      {
+        user_id: userId,
+        points: -prize.points_required,
+        action: "spent",
+        description: `Canje: ${prize.name}`,
+      },
+      { transaction: t },
+    );
+
+    await t.commit();
 
     await createNotification(
       userId,
@@ -102,6 +154,8 @@ export const createRedemption = async (
 
     res.status(201).json(redemption);
   } catch (err) {
+    await t.rollback();
+    console.error(err);
     res.status(500).json({ message: "Error", error: err });
   }
 };
@@ -183,15 +237,19 @@ export const updateRedemptionStatus = async (
   req: AuthRequestFile,
   res: Response,
 ): Promise<void> => {
+  const t = await sequelize.transaction();
   try {
     const redemption = await Redemption.findByPk(String(req.params.id), {
       include: [
         { association: "prize" },
         { association: "user", attributes: ["id", "points", "email"] },
       ],
+      lock: t.LOCK.UPDATE,
+      transaction: t,
     });
 
     if (!redemption) {
+      await t.rollback();
       res.status(404).json({ message: "Canje no encontrado" });
       return;
     }
@@ -203,6 +261,7 @@ export const updateRedemptionStatus = async (
       rejected: "Rechazado",
     };
     const status = req.body.status as RedemptionStatus;
+    const previousStatus = redemption.status;
     const updates: Partial<{
       status: RedemptionStatus;
       redeemed_at: Date;
@@ -211,21 +270,18 @@ export const updateRedemptionStatus = async (
       image: string;
     }> = { status };
     if (!redemption.user) {
+      await t.rollback();
       res.status(404).json({ message: "Usuario no encontrado" });
       return;
     }
-    if (status === "rejected") {
-      const userPoints = redemption.user.points;
-      const redemptionPoint = redemption.points_spent;
-      const reassignedPoint = userPoints + redemptionPoint;
+    if (status === "rejected" && previousStatus !== "rejected") {
       await User.update(
-        { points: reassignedPoint },
-        { where: { id: redemption.user_id } },
+        { points: Sequelize.literal(`points + ${Number(redemption.points_spent)}`) as any },
+        { where: { id: redemption.user_id }, transaction: t },
       );
-      // Restaurar stock del premio
       await Prize.update(
         { stock: Sequelize.literal("stock + 1") as any },
-        { where: { id: redemption.prize_id } },
+        { where: { id: redemption.prize_id }, transaction: t },
       );
     }
 
@@ -236,7 +292,9 @@ export const updateRedemptionStatus = async (
     if (image) updates.image = image;
     if (req.body.notes) updates.notes = req.body.notes;
 
-    await redemption.update(updates);
+    await redemption.update(updates, { transaction: t });
+    await t.commit();
+
     const prize = (redemption as unknown as { prize: { name: string } }).prize;
     const msg =
       status === "rejected"
@@ -250,6 +308,7 @@ export const updateRedemptionStatus = async (
       fileUrl: req.uploadedFile,
     });
   } catch (err) {
+    await t.rollback();
     console.log(err);
 
     res.status(500).json({ message: "Error", error: err });

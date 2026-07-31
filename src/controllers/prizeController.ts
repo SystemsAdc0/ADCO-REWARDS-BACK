@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
-import { Notification, Prize, State, User } from "../models";
+import { Response } from "express";
+import { Prize, State, User } from "../models";
 import { AuthRequest } from "../types";
 import { createNotification } from "../services/notificationService";
 import PrizeState from "../models/PrizeState";
@@ -12,12 +12,16 @@ export const getPrizes = async (
   try {
     const where: Record<string, unknown> = {};
 
-    if (req.query.status) {
-      where.status = req.query.status;
-    }
-
     const isAdmin = req.user?.role === "admin";
     const userStateId = req.user?.state_id;
+
+    if (isAdmin) {
+      if (req.query.status) {
+        where.status = req.query.status;
+      }
+    } else {
+      where.status = "active";
+    }
 
     if (req.user && !isAdmin) {
       if (!userStateId) {
@@ -38,6 +42,8 @@ export const getPrizes = async (
         return;
       }
 
+      const safeStateId = Number(userStateId);
+
       Object.assign(where, {
         [Op.or]: [
           Sequelize.literal(`
@@ -55,7 +61,7 @@ export const getPrizes = async (
             ON s.id = ps.state_id
           WHERE ps.prize_id = Prize.id
             AND s.status = 'active'
-            AND ps.state_id = ${userStateId}
+            AND ps.state_id = ${safeStateId}
         )
       `),
         ],
@@ -98,15 +104,50 @@ export const getPrizes = async (
 };
 
 export const getPrizeById = async (
-  req: Request,
+  req: AuthRequest,
   res: Response,
 ): Promise<void> => {
   try {
-    const prize = await Prize.findByPk(String(req.params.id));
+    const prize = await Prize.findByPk(String(req.params.id), {
+      include: {
+        model: State,
+        as: "states",
+        through: { attributes: [] },
+        required: false,
+      },
+    });
+
     if (!prize) {
       res.status(404).json({ message: "Premio no encontrado" });
       return;
     }
+
+    const isAdmin = req.user?.role === "admin";
+
+    if (!isAdmin) {
+      if (prize.status !== "active") {
+        res.status(404).json({ message: "Premio no disponible" });
+        return;
+      }
+
+      const prizeStates = (prize.get("states") as State[]) ?? [];
+      const isGlobal = prizeStates.length === 0;
+      const userStateId = req.user?.state_id;
+
+      const inUserState =
+        !!userStateId &&
+        prizeStates.some(
+          (s) => s.id === userStateId && s.status === "active",
+        );
+
+      if (!isGlobal && !inUserState) {
+        res
+          .status(403)
+          .json({ message: "Este premio no está disponible en tu estado." });
+        return;
+      }
+    }
+
     res.json(prize);
   } catch (err) {
     console.log(err);
@@ -198,9 +239,13 @@ export const updatePrize = async (
       return;
     }
 
+    const includesStateChange = Object.prototype.hasOwnProperty.call(
+      req.body,
+      "state_ids",
+    );
     const { state_ids = [], ...rest } = req.body;
 
-    if (Array.isArray(state_ids) && state_ids.length > 0) {
+    if (includesStateChange && Array.isArray(state_ids) && state_ids.length > 0) {
       const activeStates = await State.findAll({
         where: {
           id: state_ids,
@@ -228,27 +273,26 @@ export const updatePrize = async (
     const image =
       (req.file as Express.Multer.File | undefined)?.filename || prize.image;
 
-    // Actualizar premio
     await prize.update({
       ...rest,
       image,
     });
 
-    // Limpiar estados anteriores
-    await PrizeState.destroy({
-      where: {
-        prize_id: prize.id,
-      },
-    });
-
-    // Si llegaron estados específicos, crearlos
-    if (Array.isArray(state_ids) && state_ids.length > 0) {
-      await PrizeState.bulkCreate(
-        state_ids.map((stateId: number) => ({
+    if (includesStateChange) {
+      await PrizeState.destroy({
+        where: {
           prize_id: prize.id,
-          state_id: stateId,
-        })),
-      );
+        },
+      });
+
+      if (Array.isArray(state_ids) && state_ids.length > 0) {
+        await PrizeState.bulkCreate(
+          state_ids.map((stateId: number) => ({
+            prize_id: prize.id,
+            state_id: stateId,
+          })),
+        );
+      }
     }
 
     res.json(prize);
