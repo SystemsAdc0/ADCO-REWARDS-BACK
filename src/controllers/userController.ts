@@ -11,7 +11,7 @@ import {
 } from "../models";
 import bcrypt from "bcryptjs";
 import sequelize from "../config/database";
-import { QueryTypes } from "sequelize";
+import { Op, QueryTypes } from "sequelize";
 
 export const getUsers = async (
   _req: AuthRequest,
@@ -215,36 +215,54 @@ export const getUserFullHistory = async (
   try {
     const userId = String(req.params.id);
 
-    const [pointHistory, activityEntries, redemptions] = await Promise.all([
-      PointHistory.findAll({
-        where: { user_id: userId },
-        order: [["created_at", "DESC"]],
-        include: [{ model: User, as: "assigner", attributes: ["id", "name"] }],
-      }),
-      ActivityEntry.findAll({
-        where: { user_id: userId, archived_at: null },
-        order: [["created_at", "DESC"]],
-        include: [
-          {
-            model: Activity,
-            as: "activity",
-            attributes: ["id", "name", "points_reward"],
-          },
-          { model: User, as: "reviewer", attributes: ["id", "name"] },
-        ],
-      }),
-      Redemption.findAll({
-        where: { user_id: userId },
-        order: [["created_at", "DESC"]],
-        include: [
-          {
-            model: Prize,
-            as: "prize",
-            attributes: ["id", "name", "points_required"],
-          },
-        ],
-      }),
-    ]);
+    const [rawPointHistory, activityEntries, redemptions, archivedActivities] =
+      await Promise.all([
+        PointHistory.findAll({
+          where: { user_id: userId },
+          order: [["created_at", "DESC"]],
+          include: [
+            { model: User, as: "assigner", attributes: ["id", "name"] },
+          ],
+        }),
+        ActivityEntry.findAll({
+          where: { user_id: userId, archived_at: null },
+          order: [["created_at", "DESC"]],
+          include: [
+            {
+              model: Activity,
+              as: "activity",
+              attributes: ["id", "name", "points_reward"],
+            },
+            { model: User, as: "reviewer", attributes: ["id", "name"] },
+          ],
+        }),
+        Redemption.findAll({
+          where: { user_id: userId },
+          order: [["created_at", "DESC"]],
+          include: [
+            {
+              model: Prize,
+              as: "prize",
+              attributes: ["id", "name", "points_required"],
+            },
+          ],
+        }),
+        Activity.findAll({
+          where: { archived_at: { [Op.ne]: null } },
+          attributes: ["name"],
+          raw: true,
+        }),
+      ]);
+
+    const archivedDescriptions = new Set<string>();
+    for (const a of archivedActivities as Array<{ name: string }>) {
+      archivedDescriptions.add(`Actividad aprobada: ${a.name}`);
+      archivedDescriptions.add(`Actividad revertida: ${a.name}`);
+    }
+
+    const pointHistory = rawPointHistory.filter(
+      (p) => !archivedDescriptions.has(p.description),
+    );
 
     res.json({ pointHistory, activityEntries, redemptions });
   } catch (err) {
