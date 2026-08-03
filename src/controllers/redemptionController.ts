@@ -283,6 +283,18 @@ export const updateRedemptionStatus = async (
         { stock: Sequelize.literal("stock + 1") as any },
         { where: { id: redemption.prize_id }, transaction: t },
       );
+
+      const rejectedPrize = (redemption as unknown as { prize?: { name: string } }).prize;
+      await PointHistory.create(
+        {
+          user_id: redemption.user_id,
+          points: redemption.points_spent,
+          action: "reverted",
+          description: `Canje cancelado: ${rejectedPrize?.name ?? "premio"} (puntos devueltos)`,
+          assigned_by: req.user?.id,
+        },
+        { transaction: t },
+      );
     }
 
     if (status === "delivered") {
