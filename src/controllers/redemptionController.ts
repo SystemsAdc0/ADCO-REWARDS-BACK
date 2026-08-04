@@ -154,9 +154,8 @@ export const createRedemption = async (
     );
 
     res.status(201).json(redemption);
-  } catch (err) {
+  } catch {
     await t.rollback();
-    console.error(err);
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -189,7 +188,7 @@ export const getWinners = async (
       raw: true,
     });
     res.status(200).json(redemptions);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -207,7 +206,7 @@ export const getMyRedemptions = async (
       offset,
     });
     res.json(paginatedResponse(rows, count, page, limit));
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -236,7 +235,7 @@ export const getAllRedemptions = async (
     });
 
     res.json(paginatedResponse(rows, count, page, limit));
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -327,9 +326,8 @@ export const updateRedemptionStatus = async (
       redemption,
       fileUrl: req.uploadedFile,
     });
-  } catch (err) {
+  } catch {
     await t.rollback();
-    console.log(err);
 
     res.status(500).json({ message: "Error interno del servidor" });
   }

@@ -21,8 +21,7 @@ export const getStates = async (
     });
 
     res.json(states);
-  } catch (err) {
-    console.log(err);
+  } catch {
 
     res.status(500).json({ message: "Error interno del servidor" });
   }
@@ -68,8 +67,7 @@ export const createState = async (
     const createdState = await State.findByPk(state.id);
 
     res.status(201).json(createdState);
-  } catch (err) {
-    console.log(err);
+  } catch {
 
     res.status(500).json({ message: "Error interno del servidor" });
   }
@@ -133,8 +131,7 @@ export const updateState = async (
     const updatedState = await State.findByPk(state.id);
 
     res.json(updatedState);
-  } catch (err) {
-    console.log(err);
+  } catch {
 
     res.status(500).json({ message: "Error interno del servidor" });
   }
@@ -160,8 +157,7 @@ export const deleteState = async (
     res.json({
       message: "Estado eliminado",
     });
-  } catch (err) {
-    console.log(err);
+  } catch {
 
     res.status(500).json({ message: "Error interno del servidor" });
   }

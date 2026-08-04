@@ -16,7 +16,7 @@ export const getMyHistory = async (
       offset,
     });
     res.json(paginatedResponse(rows, count, page, limit));
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -35,7 +35,7 @@ export const getUserHistory = async (
       offset,
     });
     res.json(paginatedResponse(rows, count, page, limit));
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };

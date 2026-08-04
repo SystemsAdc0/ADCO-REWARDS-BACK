@@ -119,8 +119,7 @@ export const getActivities = async (
     });
 
     res.json(activities);
-  } catch (err) {
-    console.log(err);
+  } catch {
 
     res.status(500).json({ message: "Error interno del servidor" });
   }
@@ -136,7 +135,7 @@ export const getActivitiesPublic = async (
       order: [["start_date", "ASC"]],
     });
     res.json(activities);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -172,8 +171,7 @@ export const createActivity = async (
       });
     }
     res.status(201).json(activity);
-  } catch (err) {
-    console.log(err);
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -264,7 +262,7 @@ export const updateActivity = async (
     });
 
     res.json(updated);
-  } catch (err) {
+  } catch {
     await t.rollback();
     res.status(500).json({ message: "Error interno del servidor" });
   }
@@ -286,7 +284,7 @@ export const toggleActivityStatus = async (
       message: `Actividad ${newStatus === "active" ? "activada" : "desactivada"}`,
       status: newStatus,
     });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -303,7 +301,7 @@ export const deleteActivity = async (
     }
     await activity.update({ status: "inactive" });
     res.json({ message: "Actividad desactivada" });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -425,8 +423,7 @@ export const joinActivity = async (
       await t.rollback();
       throw error;
     }
-  } catch (err) {
-    console.log(err);
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -521,7 +518,7 @@ export const getEntries = async (
     }
 
     res.json(plainEntries);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -666,7 +663,7 @@ export const reviewEntry = async (
     }
 
     res.json({ message: "Participacion revisada", entry });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -694,7 +691,7 @@ export const updateAnswer = async (
 
     await answer.update({ answer: req.body.answer, status: "pending" });
     res.json(answer);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -816,7 +813,7 @@ export const reviewAnswer = async (
     }
 
     res.json(answer);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -862,7 +859,7 @@ export const archiveAllActivities = async (
       entries: entriesAffected,
       answers: answersAffected,
     });
-  } catch (err) {
+  } catch {
     await t.rollback();
     res.status(500).json({ message: "Error interno del servidor" });
   }
@@ -895,7 +892,7 @@ export const getArchivedActivities = async (
       order: [["archived_at", "DESC"], ["id", "DESC"]],
     });
     res.json(activities);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -924,7 +921,7 @@ export const getArchivedEntries = async (
       order: [["archived_at", "DESC"], ["id", "DESC"]],
     });
     res.json(entries);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -977,8 +974,7 @@ export const getArchiveBatches = async (
         answers_count: Number(r.answers_count) || 0,
       })),
     );
-  } catch (err) {
-    console.log(err);
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -1107,7 +1103,7 @@ export const revertEntry = async (
       message: "Participación revertida",
     });
     return;
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };

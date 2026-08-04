@@ -39,7 +39,7 @@ export const getSummary = async (
       pendingRedemptions,
       totalPointsInCirculation,
     });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -60,7 +60,7 @@ export const getTopUsers = async (
       limit: 10,
     });
     res.json(users);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -93,7 +93,7 @@ export const getPendingCounts = async (
     }
 
     res.json({ pendingEntries, pendingRedemptions, pendingPointRequests });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -130,7 +130,7 @@ export const getTopParticipants = async (
       { type: QueryTypes.SELECT },
     );
     res.json(results);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -170,7 +170,7 @@ export const getParticipationsRanking = async (
       ),
     ]);
     res.json({ total_activities: totalActivities[0]?.total ?? 0, ranking });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -205,7 +205,7 @@ export const isTopParticipant = async (
     const isTop = total > 0 && approved / total >= 0.9;
 
     res.json({ isTop });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -230,8 +230,7 @@ export const getUserMissingActivities = async (
       { type: QueryTypes.SELECT, replacements: [userId] },
     );
     res.json(missing);
-  } catch (err) {
-    console.log(err);
+  } catch {
 
     res.status(500).json({ message: "Error interno del servidor" });
   }
@@ -253,7 +252,7 @@ export const getTopPrizes = async (
       { type: QueryTypes.SELECT },
     );
     res.json(prizes);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };

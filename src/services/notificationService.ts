@@ -20,8 +20,8 @@ export const createNotification = async (
       to: user.email,
       message: formatTemplate({ type, message, name: user.name, status }),
     });
-  } catch (error) {
-    console.log(error);
+  } catch {
+    // Email failure should not block notification creation
   }
   return Notification.create({ user_id, message, type });
 };

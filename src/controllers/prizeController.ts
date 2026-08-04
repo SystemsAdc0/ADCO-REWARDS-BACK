@@ -96,7 +96,7 @@ export const getPrizes = async (
     });
 
     res.json(prizeWithStateIds);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -147,8 +147,7 @@ export const getPrizeById = async (
     }
 
     res.json(prize);
-  } catch (err) {
-    console.log(err);
+  } catch {
 
     res.status(500).json({ message: "Error interno del servidor" });
   }
@@ -220,8 +219,7 @@ export const createPrize = async (
     }
 
     res.status(201).json(prize);
-  } catch (err) {
-    console.error(err);
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -300,7 +298,7 @@ export const updatePrize = async (
     }
 
     res.json(prize);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -317,7 +315,7 @@ export const deletePrize = async (
     }
     await prize.update({ status: "inactive" });
     res.json({ message: "Premio desactivado" });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };

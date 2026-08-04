@@ -30,7 +30,7 @@ export const getUsers = async (
       order: [["id", "DESC"]],
     });
     res.json(users);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -54,7 +54,7 @@ export const getUserById = async (
       return;
     }
     res.json(user);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -94,7 +94,7 @@ export const updateUser = async (
         company: user.company,
       },
     });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -119,7 +119,7 @@ export const resetUserPassword = async (
     const hashed = await bcrypt.hash(newPassword, 10);
     await user.update({ password: hashed });
     res.json({ message: "Contraseña restablecida correctamente" });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -136,7 +136,7 @@ export const deleteUser = async (
     }
     await user.update({ status: "inactive" });
     res.json({ message: "Usuario desactivado" });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -201,7 +201,7 @@ export const addPoints = async (
       await t.rollback();
       throw txErr;
     }
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -218,7 +218,7 @@ export const togglePointRequestPermission = async (
     }
     await user.update({ can_request_points: !user.can_request_points });
     res.json({ can_request_points: user.can_request_points });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -280,7 +280,7 @@ export const getUserFullHistory = async (
     );
 
     res.json({ pointHistory, activityEntries, redemptions });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -296,7 +296,7 @@ export const getUserDirectory = async (
       order: [["name", "ASC"]],
     });
     res.json(users);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -325,7 +325,7 @@ export const getBirthdaysThisMonth = async (
       { type: QueryTypes.SELECT, replacements: { month: currentMonth } },
     );
     res.json(users);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -344,8 +344,7 @@ export const updateUserAavatar = async (
     res.json({
       message: "Usuario actualizado",
     });
-  } catch (error) {
-    console.error(error);
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };

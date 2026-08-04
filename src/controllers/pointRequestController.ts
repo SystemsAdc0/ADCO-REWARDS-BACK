@@ -47,7 +47,7 @@ export const createPointRequest = async (
     );
 
     res.status(201).json(request);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -63,7 +63,7 @@ export const getMySentRequests = async (
       order: [["created_at", "DESC"]],
     });
     res.json(requests);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -79,7 +79,7 @@ export const getIncomingRequests = async (
       order: [["created_at", "DESC"]],
     });
     res.json(requests);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -93,7 +93,7 @@ export const getPendingIncomingCount = async (
       where: { target_id: req.user!.id, status: "pending" },
     });
     res.json({ count });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -182,7 +182,7 @@ export const respondToRequest = async (
 
     await request.update({ status });
     res.json(request);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };

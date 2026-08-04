@@ -80,11 +80,19 @@ app.use((req, res, next) => {
   next();
 });
 
-// Servir imagenes subidas
-app.use(
-  "/uploads",
-  express.static(path.join(process.cwd(), process.env.UPLOAD_DIR || "uploads")),
-);
+// Servir imagenes subidas (solo extensiones de imagen permitidas)
+app.use("/uploads", (req, res, next) => {
+  const ext = path.extname(req.path).toLowerCase();
+  if (![".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(ext)) {
+    res.status(403).json({ message: "Tipo de archivo no permitido" });
+    return;
+  }
+  next();
+}, express.static(path.join(process.cwd(), process.env.UPLOAD_DIR || "uploads"), {
+  maxAge: "7d",
+  dotfiles: "deny",
+  index: false,
+}));
 
 // Swagger docs (solo en desarrollo)
 if (process.env.NODE_ENV !== "production") {

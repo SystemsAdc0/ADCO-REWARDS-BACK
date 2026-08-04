@@ -36,7 +36,7 @@ export const getAgreement = async (
       order: [["id", "DESC"]],
     });
     res.status(200).json(agreements);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -52,7 +52,7 @@ export const getAgreementByID = async (
       ],
     });
     res.status(200).json(agreement);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -105,8 +105,7 @@ export const updateAgreement = async (req: AuthRequest, res: Response) => {
       include: [{ model: AgreementImage, as: "images" }],
     });
     return res.json(updated);
-  } catch (err) {
-    console.error(err);
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -154,8 +153,7 @@ export const createAgreement = async (req: AuthRequest, res: Response) => {
       include: [{ model: AgreementImage, as: "images" }],
     });
     res.status(201).json(created);
-  } catch (err) {
-    console.error(err);
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -178,8 +176,7 @@ export const deleteAgreement = async (req: AuthRequest, res: Response) => {
     await agreement.destroy();
 
     res.status(200).json({ message: "Convenio eliminado" });
-  } catch (err) {
-    console.error(err);
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -203,7 +200,7 @@ export const deleteAgreementImageById = async (
     await deleteObjectFromGCS(image.object_name);
     await image.destroy();
     res.status(200).json({ message: "Imagen eliminada" });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };

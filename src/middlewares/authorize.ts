@@ -15,8 +15,8 @@ export const authorize = (...roles: UserRole[]) => {
         return;
       }
       next();
-    } catch (error) {
-      console.log(error);
+    } catch {
+      res.status(500).json({ message: "Error interno del servidor" });
     }
   };
 };

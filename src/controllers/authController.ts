@@ -52,7 +52,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     res
       .status(201)
       .json({ message: "Usuario registrado correctamente", id: user.id });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error al registrar" });
   }
 };
@@ -109,7 +109,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         state: (user as User & { state?: State }).state ?? null,
       },
     });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error al iniciar sesion" });
   }
 };
@@ -150,7 +150,7 @@ export const changePassword = async (
     await user.update({ password: hashed });
 
     res.json({ message: "Contraseña actualizada correctamente" });
-  } catch (err) {
+  } catch {
     res
       .status(500)
       .json({ message: "Error al cambiar la contraseña" });
@@ -174,7 +174,7 @@ export const me = async (req: AuthRequest, res: Response): Promise<void> => {
       return;
     }
     res.json(user);
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };

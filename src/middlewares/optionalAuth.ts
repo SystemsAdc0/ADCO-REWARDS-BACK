@@ -24,7 +24,7 @@ export const optionalAuth = (
     req.user = decoded;
 
     next();
-  } catch (error) {
+  } catch {
     next();
   }
 };

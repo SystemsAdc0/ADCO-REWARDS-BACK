@@ -35,7 +35,6 @@ export const prizeCloud = async (
     const publicUrl = `https://storage.googleapis.com/${bucketPublic.name}/${objectName}`;
     res.json({ objectName, publicUrl });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Error procesando imagen" });
   }
 };
@@ -60,7 +59,6 @@ export const activityCloud = async (
     const publicUrl = `https://storage.googleapis.com/${bucketPublic.name}/${objectName}`;
     res.json({ objectName, publicUrl });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Error procesando imagen" });
   }
 };
@@ -103,7 +101,6 @@ export const redemptionsUpload = async (
     req.uploadedFile = { url, objectName, publicUrl };
     next();
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Error generando signed upload URL" });
   }
 };
@@ -129,7 +126,6 @@ export const agreementUpload = async (
     const publicUrl = `https://storage.googleapis.com/${bucketPublic.name}/${objectName}`;
     res.json({ objectName, publicUrl });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Error procesando imagen" });
   }
 };
@@ -171,7 +167,6 @@ const uploadEventImage = async (
       publicUrl,
     });
   } catch (err) {
-    console.error(err);
 
     res.status(500).json({
       message: "Error procesando imagen",
@@ -222,7 +217,6 @@ export const eventUpload = async (req: Request, res: Response) => {
       publicUrl,
     });
   } catch (err) {
-    console.error(err);
 
     res.status(500).json({
       message: "Error procesando imagen",
@@ -268,7 +262,6 @@ export const googleActivityEntries = async (
 
     res.json({ url, objectName, contentType: resolvedContentType });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Error generando signed upload URL" });
   }
 };
@@ -288,7 +281,6 @@ export const getActivityFile = async (req: AuthRequest, res: Response) => {
     });
     res.json({ url });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
