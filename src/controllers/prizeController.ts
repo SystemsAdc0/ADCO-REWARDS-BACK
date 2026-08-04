@@ -4,6 +4,7 @@ import { AuthRequest } from "../types";
 import { createNotification } from "../services/notificationService";
 import PrizeState from "../models/PrizeState";
 import { Op, Sequelize } from "sequelize";
+import sequelize from "../config/database";
 
 export const getPrizes = async (
   req: AuthRequest,
@@ -61,7 +62,7 @@ export const getPrizes = async (
             ON s.id = ps.state_id
           WHERE ps.prize_id = Prize.id
             AND s.status = 'active'
-            AND ps.state_id = ${safeStateId}
+            AND ps.state_id = ${sequelize.escape(safeStateId)}
         )
       `),
         ],
@@ -96,10 +97,7 @@ export const getPrizes = async (
 
     res.json(prizeWithStateIds);
   } catch (err) {
-    res.status(500).json({
-      message: "Error",
-      error: err,
-    });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -152,7 +150,7 @@ export const getPrizeById = async (
   } catch (err) {
     console.log(err);
 
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -161,7 +159,7 @@ export const createPrize = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { name, description, state_ids = [], ...rest } = req.body;
+    const { name, description, state_ids = [], image, points_required, stock, allow_multiple_redemptions } = req.body;
 
     if (Array.isArray(state_ids) && state_ids.length > 0) {
       const activeStates = await State.findAll({
@@ -188,13 +186,14 @@ export const createPrize = async (
       }
     }
 
-    const formattedData = {
-      ...rest,
+    const prize = await Prize.create({
       name: name?.trim().toLowerCase(),
       description: description?.trim(),
-    };
-
-    const prize = await Prize.create(formattedData);
+      image,
+      points_required,
+      stock,
+      allow_multiple_redemptions,
+    });
 
     // Solo crear relaciones si se seleccionaron estados específicos
     if (state_ids.length > 0) {
@@ -223,7 +222,7 @@ export const createPrize = async (
     res.status(201).json(prize);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -243,7 +242,7 @@ export const updatePrize = async (
       req.body,
       "state_ids",
     );
-    const { state_ids = [], ...rest } = req.body;
+    const { state_ids = [], name, description, image, points_required, stock, allow_multiple_redemptions, status } = req.body;
 
     if (includesStateChange && Array.isArray(state_ids) && state_ids.length > 0) {
       const activeStates = await State.findAll({
@@ -270,12 +269,17 @@ export const updatePrize = async (
       }
     }
 
-    const image =
-      (req.file as Express.Multer.File | undefined)?.filename || prize.image;
+    const resolvedImage =
+      (req.file as Express.Multer.File | undefined)?.filename || image || prize.image;
 
     await prize.update({
-      ...rest,
-      image,
+      name: name?.trim().toLowerCase(),
+      description: description?.trim(),
+      image: resolvedImage,
+      points_required,
+      stock,
+      allow_multiple_redemptions,
+      status,
     });
 
     if (includesStateChange) {
@@ -297,10 +301,7 @@ export const updatePrize = async (
 
     res.json(prize);
   } catch (err) {
-    res.status(500).json({
-      message: "Error",
-      error: err,
-    });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -317,6 +318,6 @@ export const deletePrize = async (
     await prize.update({ status: "inactive" });
     res.json({ message: "Premio desactivado" });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };

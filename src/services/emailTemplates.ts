@@ -322,13 +322,3 @@ export function formatTemplate({
     status,
   });
 }
-
-// $ curl -X POST https://auto.adco.adi.mx/webhook/send-email \
-//   -H "Content-Type: application/json" \
-//   -H "x-api-key: adc0#CDA" \
-//   -d '{
-//     "from": "AdcoRewards",
-//     "to": "jorgealbertolejim@gmail.com",
-//     "subject": "Asunto del correo",
-//     "message": "prueba de correo"
-//   }'

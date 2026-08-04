@@ -11,7 +11,7 @@ export const getMyNotifications = async (req: AuthRequest, res: Response): Promi
     });
     res.json(notifications);
   } catch (err) {
-    res.status(500).json({ message: 'Error', error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -22,7 +22,7 @@ export const markAsRead = async (req: AuthRequest, res: Response): Promise<void>
     await notification.update({ read: true });
     res.json({ message: 'Notificacion marcada como leida' });
   } catch (err) {
-    res.status(500).json({ message: 'Error', error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -31,6 +31,6 @@ export const markAllAsRead = async (req: AuthRequest, res: Response): Promise<vo
     await Notification.update({ read: true }, { where: { user_id: req.user!.id, read: false } });
     res.json({ message: 'Todas las notificaciones marcadas como leidas' });
   } catch (err) {
-    res.status(500).json({ message: 'Error', error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };

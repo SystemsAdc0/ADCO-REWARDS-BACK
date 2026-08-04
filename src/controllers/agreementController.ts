@@ -37,7 +37,7 @@ export const getAgreement = async (
     });
     res.status(200).json(agreements);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -53,7 +53,7 @@ export const getAgreementByID = async (
     });
     res.status(200).json(agreement);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -107,7 +107,7 @@ export const updateAgreement = async (req: AuthRequest, res: Response) => {
     return res.json(updated);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -156,7 +156,7 @@ export const createAgreement = async (req: AuthRequest, res: Response) => {
     res.status(201).json(created);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -180,7 +180,7 @@ export const deleteAgreement = async (req: AuthRequest, res: Response) => {
     res.status(200).json({ message: "Convenio eliminado" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -204,6 +204,6 @@ export const deleteAgreementImageById = async (
     await image.destroy();
     res.status(200).json({ message: "Imagen eliminada" });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };

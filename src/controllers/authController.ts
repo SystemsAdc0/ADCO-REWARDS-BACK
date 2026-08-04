@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { State, User, PointHistory } from "../models";
 import { AuthRequest } from "../types";
+import { validatePassword } from "../validators/password";
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -16,6 +17,12 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       company,
       state_id,
     } = req.body;
+    const pwError = validatePassword(password);
+    if (pwError) {
+      res.status(400).json({ message: pwError });
+      return;
+    }
+
     const exists = await User.findOne({ where: { email } });
     if (exists) {
       res.status(400).json({ message: "El email ya esta registrado" });
@@ -27,7 +34,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       name,
       email,
       password: hashed,
-      role: role,
+      role: ["user", "admin"].includes(role) ? role : "user",
       points: points,
       birth_date: birth_date || null,
       company: company || null,
@@ -46,7 +53,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       .status(201)
       .json({ message: "Usuario registrado correctamente", id: user.id });
   } catch (err) {
-    res.status(500).json({ message: "Error al registrar", error: err });
+    res.status(500).json({ message: "Error al registrar" });
   }
 };
 
@@ -84,7 +91,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         state_id: user.state_id,
       },
       process.env.JWT_SECRET as string,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" } as jwt.SignOptions,
+      { expiresIn: process.env.JWT_EXPIRES_IN || "1d" } as jwt.SignOptions,
     );
 
     res.json({
@@ -103,7 +110,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       },
     });
   } catch (err) {
-    res.status(500).json({ message: "Error al iniciar sesion", error: err });
+    res.status(500).json({ message: "Error al iniciar sesion" });
   }
 };
 
@@ -121,10 +128,9 @@ export const changePassword = async (
       return;
     }
 
-    if (newPassword.length < 6) {
-      res.status(400).json({
-        message: "La nueva contraseña debe tener al menos 6 caracteres",
-      });
+    const pwError = validatePassword(newPassword);
+    if (pwError) {
+      res.status(400).json({ message: pwError });
       return;
     }
 
@@ -147,7 +153,7 @@ export const changePassword = async (
   } catch (err) {
     res
       .status(500)
-      .json({ message: "Error al cambiar la contraseña", error: err });
+      .json({ message: "Error al cambiar la contraseña" });
   }
 };
 
@@ -169,6 +175,6 @@ export const me = async (req: AuthRequest, res: Response): Promise<void> => {
     }
     res.json(user);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };

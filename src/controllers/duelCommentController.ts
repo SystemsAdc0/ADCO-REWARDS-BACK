@@ -39,7 +39,7 @@ export const getComments = async (
     });
     res.json(comments);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -88,7 +88,7 @@ export const createComment = async (
 
     res.status(201).json(full);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -114,7 +114,7 @@ export const updateComment = async (
     await comment.update({ body: String(body).trim() });
     res.json(comment);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -135,6 +135,6 @@ export const deleteComment = async (
     await comment.destroy();
     res.json({ message: "Comentario eliminado" });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };

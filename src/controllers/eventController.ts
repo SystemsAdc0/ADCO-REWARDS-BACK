@@ -88,10 +88,7 @@ export const getEvents = async (
   } catch (err) {
     console.log(err);
 
-    res.status(500).json({
-      message: "Error al obtener eventos",
-      error: err,
-    });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -125,10 +122,7 @@ export const getEventById = async (
   } catch (err) {
     console.log(err);
 
-    res.status(500).json({
-      message: "Error al obtener evento",
-      error: err,
-    });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -137,16 +131,18 @@ export const createEvent = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { name, description, gallery = [], thumbnail, ...rest } = req.body;
+    const { name, description, gallery = [], thumbnail, category, start_at, end_at, location, registration_url } = req.body;
 
-    const formattedData = {
-      ...rest,
+    const event = await Event.create({
       name: name?.trim(),
       description: description?.trim(),
       thumbnail: thumbnail?.url ?? "",
-    };
-
-    const event = await Event.create(formattedData);
+      category,
+      start_at,
+      end_at,
+      location,
+      registration_url,
+    });
 
     if (Array.isArray(gallery) && gallery.length > 0) {
       const formattedImages = gallery.map(
@@ -177,10 +173,7 @@ export const createEvent = async (
   } catch (err) {
     console.log(err);
 
-    res.status(500).json({
-      message: "Error al crear evento",
-      error: err,
-    });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -199,13 +192,18 @@ export const updateEvent = async (
       return;
     }
 
-    const { gallery, thumbnail, name, description, ...rest } = req.body;
+    const { gallery, thumbnail, name, description, category, start_at, end_at, location, registration_url, status } = req.body;
 
     await event.update({
-      ...rest,
       name: name?.trim(),
       description: description?.trim(),
       thumbnail: thumbnail?.url ?? event.thumbnail,
+      category,
+      start_at,
+      end_at,
+      location,
+      registration_url,
+      status,
     });
 
     if (Array.isArray(gallery) && gallery.length > 0) {
@@ -243,10 +241,7 @@ export const updateEvent = async (
   } catch (err) {
     console.log(err);
 
-    res.status(500).json({
-      message: "Error al actualizar evento",
-      error: err,
-    });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -273,10 +268,7 @@ export const deleteEvent = async (
   } catch (err) {
     console.log(err);
 
-    res.status(500).json({
-      message: "Error al eliminar evento",
-      error: err,
-    });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -346,10 +338,7 @@ export const cancelEvent = async (
   } catch (err) {
     console.log(err);
 
-    res.status(500).json({
-      message: "Error al eliminar evento",
-      error: err,
-    });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -379,10 +368,7 @@ export const getEventRegistrations = async (
   } catch (err) {
     console.log(err);
 
-    res.status(500).json({
-      message: "Error al obtener registros",
-      error: err,
-    });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -442,10 +428,7 @@ export const registerToEvent = async (
   } catch (err) {
     console.log(err);
 
-    res.status(500).json({
-      message: "Error al registrarse al evento",
-      error: err,
-    });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -479,10 +462,7 @@ export const cancelRegistration = async (
   } catch (err) {
     console.log(err);
 
-    res.status(500).json({
-      message: "Error al registrarse al evento",
-      error: err,
-    });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -525,10 +505,7 @@ export const createEventImages = async (
   } catch (err) {
     console.log(err);
 
-    res.status(500).json({
-      message: "Error al registrarse al evento",
-      error: err,
-    });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -552,7 +529,7 @@ export const deleteLocationImageById = async (
     await image.destroy();
     res.status(200).json({ message: "Imagen eliminada" });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -573,7 +550,7 @@ export const deleteEventImageById = async (req: AuthRequest, res: Response) => {
     await image.destroy();
     res.status(200).json({ message: "Imagen eliminada" });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -598,6 +575,6 @@ export const getEventsGalleries = async (
 
     res.json(events);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };

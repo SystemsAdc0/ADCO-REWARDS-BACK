@@ -18,100 +18,6 @@ import ActivityQuestion from "../models/ActivityQuestion";
 import ActivityAnswer from "../models/ActivityAnswer";
 import sequelize from "../config/database";
 
-export const getActivitiesAdmin = async (
-  req: AuthRequest,
-  res: Response,
-): Promise<void> => {
-  try {
-    const user = req.user;
-    if (!user?.id) {
-      res.status(403).json("usuario no identificado");
-      return;
-    }
-
-    // Desactivar actividades cuya end_date ya pasó, respetando el time_zone
-    // registrado en cada actividad. CONVERT_TZ convierte NOW() (UTC) al
-    // timezone de la actividad y lo compara con end_date (almacenado en
-    // ese mismo timezone local).
-    await Activity.update(
-      { status: "inactive" },
-      {
-        where: {
-          status: "active",
-          archived_at: null,
-          [Op.and]: Sequelize.literal(
-            "CONVERT_TZ(NOW(), 'UTC', time_zone) >= end_date",
-          ),
-        },
-      },
-    );
-
-    const activities = await Activity.findAll({
-      where: { archived_at: null },
-      attributes: {
-        include: [
-          [
-            Sequelize.literal(
-              `EXISTS (
-            SELECT 1
-            FROM activity_entries ae
-            WHERE ae.activity_id = Activity.id
-              AND ae.user_id = ${user.id}
-              AND ae.status != 'rejected'
-              AND ae.archived_at IS NULL
-          )`,
-            ),
-            "participate",
-          ],
-          [
-            Sequelize.literal(
-              `(
-            SELECT ae.review_notes
-            FROM activity_entries ae
-            WHERE ae.activity_id = Activity.id
-              AND ae.user_id = ${user.id}
-              AND ae.status = 'rejected'
-              AND ae.archived_at IS NULL
-            ORDER BY ae.updated_at DESC
-            LIMIT 1
-          )`,
-            ),
-            "note",
-          ],
-        ],
-      },
-      include: [
-        {
-          model: SocialMedia,
-          as: "social_medias",
-          attributes: ["name"],
-        },
-        {
-          model: ActivityQuestion,
-          as: "questions",
-          attributes: ["id", "question"],
-          required: false,
-          include: [
-            {
-              model: ActivityAnswer,
-              as: "answers",
-              attributes: ["id", "answer", "status"],
-              where: { user_id: user.id, archived_at: null },
-              required: false,
-            },
-          ],
-        },
-      ],
-      order: [["id", "DESC"]],
-    });
-
-    res.json(activities);
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({ message: "Error", error: err });
-  }
-};
 export const getActivities = async (
   req: AuthRequest,
   res: Response,
@@ -149,7 +55,7 @@ export const getActivities = async (
             SELECT 1
             FROM activity_entries ae
             WHERE ae.activity_id = Activity.id
-              AND ae.user_id = ${user.id}
+              AND ae.user_id = ${sequelize.escape(user.id)}
               AND ae.status != 'rejected'
               AND ae.archived_at IS NULL
           )
@@ -162,7 +68,7 @@ export const getActivities = async (
             SELECT ae.review_notes
             FROM activity_entries ae
             WHERE ae.activity_id = Activity.id
-              AND ae.user_id = ${user.id}
+              AND ae.user_id = ${sequelize.escape(user.id)}
               AND ae.status = 'rejected'
               AND ae.archived_at IS NULL
             ORDER BY ae.updated_at DESC
@@ -177,7 +83,7 @@ export const getActivities = async (
             SELECT ae.status
             FROM activity_entries ae
             WHERE ae.activity_id = Activity.id
-              AND ae.user_id = ${user.id}
+              AND ae.user_id = ${sequelize.escape(user.id)}
               AND ae.archived_at IS NULL
             ORDER BY ae.updated_at DESC
             LIMIT 1
@@ -216,7 +122,7 @@ export const getActivities = async (
   } catch (err) {
     console.log(err);
 
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -231,7 +137,7 @@ export const getActivitiesPublic = async (
     });
     res.json(activities);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -240,8 +146,17 @@ export const createActivity = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const activity = await Activity.create(req.body);
-    const { social_medias, questions } = req.body;
+    const {
+      name, description, category, image,
+      points_reward, start_date, end_date,
+      time_zone, counts_for_travel,
+      social_medias, questions,
+    } = req.body;
+    const activity = await Activity.create({
+      name, description, category, image,
+      points_reward, start_date, end_date,
+      time_zone, counts_for_travel,
+    });
 
     for (let s of social_medias) {
       await SocialMedia.create({
@@ -259,7 +174,7 @@ export const createActivity = async (
     res.status(201).json(activity);
   } catch (err) {
     console.log(err);
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -351,7 +266,7 @@ export const updateActivity = async (
     res.json(updated);
   } catch (err) {
     await t.rollback();
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -372,7 +287,7 @@ export const toggleActivityStatus = async (
       status: newStatus,
     });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -389,7 +304,7 @@ export const deleteActivity = async (
     await activity.update({ status: "inactive" });
     res.json({ message: "Actividad desactivada" });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -442,6 +357,7 @@ export const joinActivity = async (
       res.status(400).json({
         message: "Esta actividad requiere responder preguntas",
       });
+      return;
     }
 
     const validQuestionIds = activityQuestions.map((q) => q.id);
@@ -451,6 +367,7 @@ export const joinActivity = async (
         res.status(400).json({
           message: `La pregunta con id ${q.id} no pertenece a la actividad`,
         });
+        return;
       }
     }
 
@@ -510,7 +427,7 @@ export const joinActivity = async (
     }
   } catch (err) {
     console.log(err);
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -605,7 +522,7 @@ export const getEntries = async (
 
     res.json(plainEntries);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -708,21 +625,36 @@ export const reviewEntry = async (
 
       const canAward = !alreadyAwarded || (alreadyAwarded && alreadyReverted);
       if (allAnswersApproved && activity && canAward) {
-        const user = await User.findByPk(entry.user_id);
-        if (user) {
-          await user.update({ points: user.points + activity.points_reward });
-          await PointHistory.create({
-            user_id: user.id,
-            points: activity.points_reward,
-            action: "earned",
-            description: `Actividad aprobada: ${activity.name}`,
-            assigned_by: req.user!.id,
+        const tAward = await sequelize.transaction();
+        try {
+          const user = await User.findByPk(entry.user_id, {
+            lock: tAward.LOCK.UPDATE,
+            transaction: tAward,
           });
-          await createNotification(
-            user.id,
-            `¡Ganaste ${activity.points_reward} puntos por "${activity.name}"!`,
-            "success",
-          );
+          if (user) {
+            await user.update(
+              { points: user.points + activity.points_reward },
+              { transaction: tAward },
+            );
+            await PointHistory.create({
+              user_id: user.id,
+              points: activity.points_reward,
+              action: "earned",
+              description: `Actividad aprobada: ${activity.name}`,
+              assigned_by: req.user!.id,
+            }, { transaction: tAward });
+            await tAward.commit();
+            await createNotification(
+              user.id,
+              `¡Ganaste ${activity.points_reward} puntos por "${activity.name}"!`,
+              "success",
+            );
+          } else {
+            await tAward.commit();
+          }
+        } catch (txErr) {
+          await tAward.rollback();
+          throw txErr;
         }
       }
     } else {
@@ -735,7 +667,7 @@ export const reviewEntry = async (
 
     res.json({ message: "Participacion revisada", entry });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -763,7 +695,7 @@ export const updateAnswer = async (
     await answer.update({ answer: req.body.answer, status: "pending" });
     res.json(answer);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -885,7 +817,7 @@ export const reviewAnswer = async (
 
     res.json(answer);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -932,7 +864,7 @@ export const archiveAllActivities = async (
     });
   } catch (err) {
     await t.rollback();
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -964,7 +896,7 @@ export const getArchivedActivities = async (
     });
     res.json(activities);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -993,7 +925,7 @@ export const getArchivedEntries = async (
     });
     res.json(entries);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -1047,7 +979,7 @@ export const getArchiveBatches = async (
     );
   } catch (err) {
     console.log(err);
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -1056,10 +988,19 @@ export const revertEntry = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { activity_id, user_id, id, review_notes } = req.body;
+    const { activity_id, id, review_notes } = req.body;
     const activity = await Activity.findByPk(activity_id);
-    const user = await User.findByPk(user_id);
     const entry = await ActivityEntry.findByPk(id);
+
+    if (!entry || entry?.status !== "approved") {
+      res.status(400).json({
+        message:
+          "No se puede revertir una participación que no este aprobada o no existe",
+      });
+      return;
+    }
+
+    const user = await User.findByPk(entry.user_id);
 
     if (!activity) {
       res.status(404).json({ message: "Actividad no encontrada" });
@@ -1068,14 +1009,6 @@ export const revertEntry = async (
 
     if (!user) {
       res.status(404).json({ message: "Usuario no encontrado" });
-      return;
-    }
-
-    if (!entry || entry?.status !== "approved") {
-      res.status(400).json({
-        message:
-          "No se puede revertir una participación que no este aprobada o no existe",
-      });
       return;
     }
 
@@ -1175,6 +1108,6 @@ export const revertEntry = async (
     });
     return;
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };

@@ -12,6 +12,7 @@ import {
 import bcrypt from "bcryptjs";
 import sequelize from "../config/database";
 import { Op, QueryTypes } from "sequelize";
+import { validatePassword } from "../validators/password";
 
 export const getUsers = async (
   _req: AuthRequest,
@@ -30,7 +31,7 @@ export const getUsers = async (
     });
     res.json(users);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -54,7 +55,7 @@ export const getUserById = async (
     }
     res.json(user);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -94,7 +95,7 @@ export const updateUser = async (
       },
     });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -105,10 +106,9 @@ export const resetUserPassword = async (
   try {
     const { id } = req.params;
     const { newPassword } = req.body;
-    if (!newPassword || newPassword.length < 6) {
-      res
-        .status(400)
-        .json({ message: "La contraseña debe tener al menos 6 caracteres" });
+    const pwError = validatePassword(newPassword);
+    if (pwError) {
+      res.status(400).json({ message: pwError });
       return;
     }
     const user = await User.findByPk(String(id));
@@ -120,7 +120,7 @@ export const resetUserPassword = async (
     await user.update({ password: hashed });
     res.json({ message: "Contraseña restablecida correctamente" });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -137,7 +137,7 @@ export const deleteUser = async (
     await user.update({ status: "inactive" });
     res.json({ message: "Usuario desactivado" });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -146,11 +146,6 @@ export const addPoints = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const user = await User.findByPk(String(req.params.id));
-    if (!user) {
-      res.status(404).json({ message: "Usuario no encontrado" });
-      return;
-    }
     const rawPoints = Number(req.body?.points);
     const { description } = req.body;
 
@@ -162,32 +157,52 @@ export const addPoints = async (
     }
 
     const isDeduction = rawPoints < 0;
-    const newTotal = user.points + rawPoints;
+    const t = await sequelize.transaction();
 
-    if (isDeduction && newTotal < 0) {
-      res.status(400).json({
-        message: `El usuario solo tiene ${user.points} puntos disponibles`,
+    try {
+      const user = await User.findByPk(String(req.params.id), {
+        lock: t.LOCK.UPDATE,
+        transaction: t,
       });
-      return;
+      if (!user) {
+        await t.rollback();
+        res.status(404).json({ message: "Usuario no encontrado" });
+        return;
+      }
+
+      const newTotal = user.points + rawPoints;
+
+      if (isDeduction && newTotal < 0) {
+        await t.rollback();
+        res.status(400).json({
+          message: `El usuario solo tiene ${user.points} puntos disponibles`,
+        });
+        return;
+      }
+
+      await user.update({ points: newTotal }, { transaction: t });
+      await PointHistory.create({
+        user_id: user.id,
+        points: rawPoints,
+        action: "adjusted",
+        description:
+          description ||
+          (isDeduction ? "Ajuste manual (retiro)" : "Ajuste manual de puntos"),
+        assigned_by: req.user!.id,
+      }, { transaction: t });
+
+      await t.commit();
+
+      res.json({
+        message: isDeduction ? "Puntos retirados" : "Puntos agregados",
+        total_points: newTotal,
+      });
+    } catch (txErr) {
+      await t.rollback();
+      throw txErr;
     }
-
-    await user.update({ points: newTotal });
-    await PointHistory.create({
-      user_id: user.id,
-      points: rawPoints,
-      action: "adjusted",
-      description:
-        description ||
-        (isDeduction ? "Ajuste manual (retiro)" : "Ajuste manual de puntos"),
-      assigned_by: req.user!.id,
-    });
-
-    res.json({
-      message: isDeduction ? "Puntos retirados" : "Puntos agregados",
-      total_points: newTotal,
-    });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -204,7 +219,7 @@ export const togglePointRequestPermission = async (
     await user.update({ can_request_points: !user.can_request_points });
     res.json({ can_request_points: user.can_request_points });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -266,7 +281,7 @@ export const getUserFullHistory = async (
 
     res.json({ pointHistory, activityEntries, redemptions });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -282,7 +297,7 @@ export const getUserDirectory = async (
     });
     res.json(users);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -311,7 +326,7 @@ export const getBirthdaysThisMonth = async (
     );
     res.json(users);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -331,6 +346,6 @@ export const updateUserAavatar = async (
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error", error: error });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };

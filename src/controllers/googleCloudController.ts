@@ -65,6 +65,19 @@ export const activityCloud = async (
   }
 };
 
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const ALLOWED_IMAGE_EXTS = ["jpg", "jpeg", "png", "webp", "gif"];
+const ALLOWED_ENTRY_TYPES = [
+  "image/jpeg", "image/png", "image/webp", "image/gif",
+  "video/mp4", "video/quicktime", "video/webm",
+  "application/pdf",
+];
+const ALLOWED_ENTRY_EXTS = [
+  "jpg", "jpeg", "png", "webp", "gif",
+  "mp4", "mov", "webm",
+  "pdf",
+];
+
 export const redemptionsUpload = async (
   req: AuthRequestFile,
   res: Response,
@@ -73,7 +86,11 @@ export const redemptionsUpload = async (
   try {
     const { filename, contentType } = req.body;
     if (!filename || !contentType) return next();
-    const ext = filename.split(".").pop()?.toLowerCase() || "bin";
+    const ext = filename.split(".").pop()?.toLowerCase() || "";
+    if (!ALLOWED_IMAGE_EXTS.includes(ext) || !ALLOWED_IMAGE_TYPES.includes(contentType)) {
+      res.status(400).json({ message: "Tipo de archivo no permitido. Solo imágenes (jpg, png, webp, gif)." });
+      return;
+    }
     const objectName = `redemptions/${Date.now()}-${crypto.randomUUID()}.${ext}`;
     const file = bucketPublic.file(objectName);
     const [url] = await file.getSignedUrl({
@@ -225,15 +242,18 @@ export const googleActivityEntries = async (
       return;
     }
 
-    const ext = filename.split(".").pop()?.toLowerCase() || "bin";
-    const objectName = `activity_entries/${Date.now()}-${crypto.randomUUID()}.${ext}`;
-
-    // Videos pueden tardar varios minutos en subirse; se extiende el tiempo
-    // de expiración del signed URL para evitar 403 por tiempo agotado.
+    const ext = filename.split(".").pop()?.toLowerCase() || "";
     const resolvedContentType =
       contentType && contentType.trim() !== ""
         ? contentType
         : "application/octet-stream";
+
+    if (!ALLOWED_ENTRY_EXTS.includes(ext) || !ALLOWED_ENTRY_TYPES.includes(resolvedContentType)) {
+      res.status(400).json({ message: "Tipo de archivo no permitido. Solo imágenes (jpg, png, webp, gif), videos (mp4, mov, webm) o PDF." });
+      return;
+    }
+
+    const objectName = `activity_entries/${Date.now()}-${crypto.randomUUID()}.${ext}`;
     const isVideo = resolvedContentType.startsWith("video/");
     const expiryMs = isVideo ? 60 * 60 * 1000 : 10 * 60 * 1000;
 
@@ -254,13 +274,23 @@ export const googleActivityEntries = async (
 };
 
 export const getActivityFile = async (req: AuthRequest, res: Response) => {
-  const file = bucket.file(req.body.file);
-  const [url] = await file.getSignedUrl({
-    version: "v4",
-    action: "read",
-    expires: Date.now() + 2 * 60 * 1000,
-  });
-  res.json({ url });
+  try {
+    const filePath = req.body.file;
+    if (!filePath || typeof filePath !== "string" || !filePath.startsWith("activity_entries/")) {
+      res.status(400).json({ message: "Ruta de archivo no válida" });
+      return;
+    }
+    const file = bucket.file(filePath);
+    const [url] = await file.getSignedUrl({
+      version: "v4",
+      action: "read",
+      expires: Date.now() + 2 * 60 * 1000,
+    });
+    res.json({ url });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error interno del servidor" });
+  }
 };
 
 /**

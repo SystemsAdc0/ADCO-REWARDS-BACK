@@ -40,7 +40,7 @@ export const getSummary = async (
       totalPointsInCirculation,
     });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -61,7 +61,7 @@ export const getTopUsers = async (
     });
     res.json(users);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -94,7 +94,7 @@ export const getPendingCounts = async (
 
     res.json({ pendingEntries, pendingRedemptions, pendingPointRequests });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -131,7 +131,7 @@ export const getTopParticipants = async (
     );
     res.json(results);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -171,7 +171,7 @@ export const getParticipationsRanking = async (
     ]);
     res.json({ total_activities: totalActivities[0]?.total ?? 0, ranking });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -206,7 +206,7 @@ export const isTopParticipant = async (
 
     res.json({ isTop });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -233,7 +233,7 @@ export const getUserMissingActivities = async (
   } catch (err) {
     console.log(err);
 
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -254,6 +254,6 @@ export const getTopPrizes = async (
     );
     res.json(prizes);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };

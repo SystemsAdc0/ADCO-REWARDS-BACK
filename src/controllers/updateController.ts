@@ -45,7 +45,7 @@ export const sendUpdate = async (
 
     res.status(201).json({ update, notified: users.length });
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -66,6 +66,6 @@ export const getUpdates = async (
     });
     res.json(updates);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };

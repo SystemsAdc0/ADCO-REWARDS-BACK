@@ -3,6 +3,7 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import path from "path";
 import swaggerUi from "swagger-ui-express";
@@ -40,7 +41,7 @@ const globalLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 4000,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "Demasiados intentos de acceso, intenta en 15 minutos." },
@@ -50,10 +51,11 @@ const authLimiter = rateLimit({
 app.set("trust proxy", 1);
 app.use(
   cors({
-    origin: process.env.ORIGIN,
+    origin: process.env.ORIGIN || false,
     credentials: true,
   }),
 );
+app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(globalLimiter);
@@ -84,8 +86,10 @@ app.use(
   express.static(path.join(process.cwd(), process.env.UPLOAD_DIR || "uploads")),
 );
 
-// Swagger docs
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Swagger docs (solo en desarrollo)
+if (process.env.NODE_ENV !== "production") {
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+}
 
 // API Routes
 app.use("/api/auth", authLimiter, authRoutes);

@@ -4,6 +4,7 @@ import { Redemption, Prize, User, PointHistory, State } from "../models";
 import { createNotification } from "../services/notificationService";
 import { Op, Sequelize } from "sequelize";
 import sequelize from "../config/database";
+import { parsePagination, paginatedResponse } from "../utils/pagination";
 
 export const createRedemption = async (
   req: AuthRequest,
@@ -156,7 +157,7 @@ export const createRedemption = async (
   } catch (err) {
     await t.rollback();
     console.error(err);
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -189,7 +190,7 @@ export const getWinners = async (
     });
     res.status(200).json(redemptions);
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 export const getMyRedemptions = async (
@@ -197,14 +198,17 @@ export const getMyRedemptions = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const redemptions = await Redemption.findAll({
+    const { page, limit, offset } = parsePagination(req.query as Record<string, unknown>);
+    const { count, rows } = await Redemption.findAndCountAll({
       where: { user_id: req.user!.id },
       include: [{ association: "prize" }],
       order: [["created_at", "DESC"]],
+      limit,
+      offset,
     });
-    res.json(redemptions);
+    res.json(paginatedResponse(rows, count, page, limit));
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -213,7 +217,8 @@ export const getAllRedemptions = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const redemptions = await Redemption.findAll({
+    const { page, limit, offset } = parsePagination(req.query as Record<string, unknown>);
+    const { count, rows } = await Redemption.findAndCountAll({
       attributes: {
         exclude: ["delivered_by", "user_id"],
       },
@@ -225,11 +230,14 @@ export const getAllRedemptions = async (
           : []),
       ],
       order: [["created_at", "DESC"]],
+      limit,
+      offset,
+      distinct: true,
     });
 
-    res.json(redemptions);
+    res.json(paginatedResponse(rows, count, page, limit));
   } catch (err) {
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -276,7 +284,7 @@ export const updateRedemptionStatus = async (
     }
     if (status === "rejected" && previousStatus !== "rejected") {
       await User.update(
-        { points: Sequelize.literal(`points + ${Number(redemption.points_spent)}`) as any },
+        { points: Sequelize.literal(`points + ${sequelize.escape(Number(redemption.points_spent))}`) as any },
         { where: { id: redemption.user_id }, transaction: t },
       );
       await Prize.update(
@@ -323,6 +331,6 @@ export const updateRedemptionStatus = async (
     await t.rollback();
     console.log(err);
 
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };

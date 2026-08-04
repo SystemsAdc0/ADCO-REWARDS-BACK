@@ -40,6 +40,6 @@ export const authActivity = async (
     next();
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Error", error: err });
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
