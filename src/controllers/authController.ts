@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { State, User } from "../models";
+import { State, User, PointHistory } from "../models";
 import { AuthRequest } from "../types";
 
 export const register = async (req: Request, res: Response): Promise<void> => {
@@ -33,6 +33,15 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       company: company || null,
       state_id: state_id || null,
     });
+    if (points && Number(points) > 0) {
+      await PointHistory.create({
+        user_id: user.id,
+        points: Number(points),
+        action: "adjusted",
+        description: "Puntos iniciales al registrar cuenta",
+      });
+    }
+
     res
       .status(201)
       .json({ message: "Usuario registrado correctamente", id: user.id });
