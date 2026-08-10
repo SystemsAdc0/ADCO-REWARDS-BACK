@@ -1,6 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/database";
-import { PrizeStatus } from "../types";
+import { PrizeDeliveryTimeUnit, PrizeStatus } from "../types";
 
 interface PrizeAttributes {
   id: number;
@@ -11,6 +11,9 @@ interface PrizeAttributes {
   stock: number;
   allow_multiple_redemptions: boolean;
   status: PrizeStatus;
+  delivery_time_min: number;
+  delivery_time_max: number;
+  delivery_time_unit: PrizeDeliveryTimeUnit;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -31,6 +34,9 @@ class Prize
   public allow_multiple_redemptions!: boolean;
   public stock!: number;
   public status!: PrizeStatus;
+  public delivery_time_min!: number;
+  public delivery_time_max!: number;
+  public delivery_time_unit!: PrizeDeliveryTimeUnit;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -56,9 +62,22 @@ Prize.init(
       type: DataTypes.ENUM("active", "inactive"),
       defaultValue: "active",
     },
+    delivery_time_min: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    delivery_time_max: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    delivery_time_unit: {
+      type: DataTypes.ENUM("hours", "days", "weeks"),
+      allowNull: true,
+      defaultValue: "days",
+    },
   },
   {
-    sequelize, 
+    sequelize,
     tableName: "prizes",
     timestamps: true,
     createdAt: "created_at",
