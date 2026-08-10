@@ -139,6 +139,9 @@ async function seed() {
           "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         stock: 10,
         allow_multiple_redemptions: true,
+        delivery_time_min: 1,
+        delivery_time_max: 2,
+        delivery_time_unit: "days",
       },
       {
         name: "Tarjeta de regalo $50",
@@ -148,6 +151,9 @@ async function seed() {
           "https://smodprint.com/wp-content/uploads/2018/09/Large-Format-Flex-Banner-Print.jpg",
         stock: 20,
         allow_multiple_redemptions: true,
+        delivery_time_min: 1,
+        delivery_time_max: 2,
+        delivery_time_unit: "days",
       },
       {
         name: "Mochila Ejecutiva",
@@ -157,6 +163,9 @@ async function seed() {
         points_required: 500,
         stock: 5,
         allow_multiple_redemptions: true,
+        delivery_time_min: 1,
+        delivery_time_max: 2,
+        delivery_time_unit: "days",
       },
       {
         name: "Termo Stanley 1L",
@@ -166,6 +175,9 @@ async function seed() {
         points_required: 150,
         stock: 15,
         allow_multiple_redemptions: true,
+        delivery_time_min: 1,
+        delivery_time_max: 2,
+        delivery_time_unit: "days",
       },
       {
         name: "Curso Online Premium",
@@ -175,8 +187,11 @@ async function seed() {
         points_required: 400,
         stock: 50,
         allow_multiple_redemptions: true,
+        delivery_time_min: 1,
+        delivery_time_max: 2,
+        delivery_time_unit: "days",
       },
-    ]); 
+    ]);
     console.log("Premios creados.");
 
     // Obtener IDs de usuarios creados
