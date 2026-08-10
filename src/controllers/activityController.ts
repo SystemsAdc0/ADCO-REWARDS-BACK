@@ -46,7 +46,7 @@ export const getActivities = async (
       },
     );
     const activities = await Activity.findAll({
-      where: { archived_at: null },
+      where: { status: "active", archived_at: null },
       attributes: {
         include: [
           [
@@ -121,6 +121,57 @@ export const getActivities = async (
     res.json(activities);
   } catch {
 
+    res.status(500).json({ message: "Error interno del servidor" });
+  }
+};
+
+export const getActivitiesAdmin = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const user = req.user;
+    if (!user?.id) {
+      res.status(403).json("usuario no identificado");
+      return;
+    }
+
+    // Desactivar actividades vencidas
+    await Activity.update(
+      { status: "inactive" },
+      {
+        where: {
+          status: "active",
+          archived_at: null,
+          [Op.and]: Sequelize.literal(
+            "CONVERT_TZ(NOW(), 'UTC', time_zone) >= end_date",
+          ),
+        },
+      },
+    );
+
+    const includeDeleted = req.query.includeDeleted === "true";
+    const activities = await Activity.findAll({
+      where: { archived_at: null },
+      include: [
+        {
+          model: SocialMedia,
+          as: "social_medias",
+          attributes: ["name"],
+        },
+        {
+          model: ActivityQuestion,
+          as: "questions",
+          attributes: ["id", "question"],
+          required: false,
+        },
+      ],
+      order: [["id", "DESC"]],
+      paranoid: !includeDeleted,
+    });
+
+    res.json(activities);
+  } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -299,8 +350,30 @@ export const deleteActivity = async (
       res.status(404).json({ message: "Actividad no encontrada" });
       return;
     }
-    await activity.update({ status: "inactive" });
-    res.json({ message: "Actividad desactivada" });
+    // Soft delete: paranoid mode pone deleted_at = NOW()
+    await activity.destroy();
+    res.json({ message: "Actividad eliminada" });
+  } catch {
+    res.status(500).json({ message: "Error interno del servidor" });
+  }
+};
+
+export const restoreActivity = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const activity = await Activity.findByPk(String(req.params.id), { paranoid: false });
+    if (!activity) {
+      res.status(404).json({ message: "Actividad no encontrada" });
+      return;
+    }
+    if (!activity.deleted_at) {
+      res.status(400).json({ message: "La actividad no está eliminada" });
+      return;
+    }
+    await activity.restore();
+    res.json({ message: "Actividad restaurada" });
   } catch {
     res.status(500).json({ message: "Error interno del servidor" });
   }

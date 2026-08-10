@@ -1,9 +1,11 @@
 import { Router } from "express";
 import {
   getActivities,
+  getActivitiesAdmin,
   createActivity,
   updateActivity,
   deleteActivity,
+  restoreActivity,
   toggleActivityStatus,
   joinActivity,
   getEntries,
@@ -25,7 +27,7 @@ import { authActivity } from "../middlewares/authActivity";
 const router = Router();
 
 router.get("/public", getActivitiesPublic);
-router.get("/private/admin", authenticate, authorize("admin"), getActivities);
+router.get("/private/admin", authenticate, authorize("admin"), getActivitiesAdmin);
 router.get(
   "/private",
   authenticate,
@@ -42,6 +44,7 @@ router.patch(
   toggleActivityStatus,
 );
 router.delete("/:id", authenticate, authorize("admin"), deleteActivity);
+router.patch("/:id/restore", authenticate, authorize("admin"), restoreActivity);
 router.post(
   "/:id/join",
   authenticate,

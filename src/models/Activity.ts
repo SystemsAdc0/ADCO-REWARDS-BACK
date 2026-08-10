@@ -17,13 +17,14 @@ interface ActivityAttributes {
   counts_for_travel: boolean;
   archived_at?: Date | null;
   archive_label?: string | null;
+  deleted_at?: Date | null;
   created_at?: Date;
   updated_at?: Date;
 }
 
 interface ActivityCreationAttributes extends Optional<
   ActivityAttributes,
-  "id" | "status" | "counts_for_travel" | "time_zone" | "archived_at" | "archive_label"
+  "id" | "status" | "counts_for_travel" | "time_zone" | "archived_at" | "archive_label" | "deleted_at"
 > {}
 
 class Activity
@@ -43,6 +44,7 @@ class Activity
   public counts_for_travel!: boolean;
   public archived_at?: Date | null;
   public archive_label?: string | null;
+  public deleted_at?: Date | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -87,6 +89,11 @@ Activity.init(
       allowNull: true,
       defaultValue: null,
     },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+    },
   },
   {
     sequelize,
@@ -94,6 +101,8 @@ Activity.init(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
+    paranoid: true,
+    deletedAt: "deleted_at",
   },
 );
 
