@@ -46,7 +46,7 @@ export const getActivities = async (
       },
     );
     const activities = await Activity.findAll({
-      where: { status: "active", archived_at: null },
+      where: { status: { [Op.in]: ["active", "inactive"] }, archived_at: null },
       attributes: {
         include: [
           [
