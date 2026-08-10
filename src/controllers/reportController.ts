@@ -123,6 +123,7 @@ export const getTopParticipants = async (
        WHERE u.role IN ('user', 'moderator')
          AND a.counts_for_travel = 1
          AND a.archived_at IS NULL
+         AND a.deleted_at IS NULL
          AND ae.archived_at IS NULL
        GROUP BY u.id, u.name, u.email, u.avatar
        ORDER BY approved DESC, total_participations DESC
@@ -142,7 +143,7 @@ export const getParticipationsRanking = async (
   try {
     const [totalActivities, ranking] = await Promise.all([
       sequelize.query<{ total: number }>(
-        `SELECT COUNT(*) as total FROM activities WHERE counts_for_travel = 1 AND archived_at IS NULL`,
+        `SELECT COUNT(*) as total FROM activities WHERE counts_for_travel = 1 AND archived_at IS NULL AND deleted_at IS NULL`,
         { type: QueryTypes.SELECT },
       ),
       sequelize.query<{
@@ -162,6 +163,7 @@ export const getParticipationsRanking = async (
          WHERE u.role IN ('user', 'moderator')
            AND a.counts_for_travel = 1
            AND a.archived_at IS NULL
+           AND a.deleted_at IS NULL
            AND ae.archived_at IS NULL
          GROUP BY u.id, u.name, u.avatar
          ORDER BY participations DESC
@@ -184,7 +186,7 @@ export const isTopParticipant = async (
 
     const [totalRow, userRow] = await Promise.all([
       sequelize.query<{ total: number }>(
-        `SELECT COUNT(*) as total FROM activities WHERE counts_for_travel = 1 AND archived_at IS NULL`,
+        `SELECT COUNT(*) as total FROM activities WHERE counts_for_travel = 1 AND archived_at IS NULL AND deleted_at IS NULL`,
         { type: QueryTypes.SELECT },
       ),
       sequelize.query<{ approved: number }>(
@@ -194,6 +196,7 @@ export const isTopParticipant = async (
          WHERE ae.user_id = :userId
            AND a.counts_for_travel = 1
            AND a.archived_at IS NULL
+           AND a.deleted_at IS NULL
            AND ae.archived_at IS NULL
            AND ae.status = 'approved'`,
         { type: QueryTypes.SELECT, replacements: { userId } },
@@ -225,7 +228,7 @@ export const getUserMissingActivities = async (
        FROM activities a
        LEFT JOIN activity_entries ae
          ON ae.activity_id = a.id AND ae.user_id = ? AND ae.status = 'approved' AND ae.archived_at IS NULL
-       WHERE a.counts_for_travel = 1 AND a.archived_at IS NULL AND ae.id IS NULL
+       WHERE a.counts_for_travel = 1 AND a.archived_at IS NULL AND a.deleted_at IS NULL AND ae.id IS NULL
        ORDER BY a.name ASC`,
       { type: QueryTypes.SELECT, replacements: [userId] },
     );
