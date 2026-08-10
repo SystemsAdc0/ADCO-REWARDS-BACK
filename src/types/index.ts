@@ -47,3 +47,5 @@ export type EventCategory =
   | "corporate"
   | "community"
   | "other";
+
+export type PrizeDeliveryTimeUnit = "hours" | "days" | "weeks";

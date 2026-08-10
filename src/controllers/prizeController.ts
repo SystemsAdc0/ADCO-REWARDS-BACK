@@ -158,7 +158,7 @@ export const createPrize = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { name, description, state_ids = [], image, points_required, stock, allow_multiple_redemptions } = req.body;
+    const { name, description, state_ids = [], image, points_required, stock, allow_multiple_redemptions, delivery_time_min, delivery_time_max, delivery_time_unit } = req.body;
 
     if (Array.isArray(state_ids) && state_ids.length > 0) {
       const activeStates = await State.findAll({
@@ -192,6 +192,9 @@ export const createPrize = async (
       points_required,
       stock,
       allow_multiple_redemptions,
+      delivery_time_min,
+      delivery_time_max,
+      delivery_time_unit
     });
 
     // Solo crear relaciones si se seleccionaron estados específicos
@@ -240,7 +243,7 @@ export const updatePrize = async (
       req.body,
       "state_ids",
     );
-    const { state_ids = [], name, description, image, points_required, stock, allow_multiple_redemptions, status } = req.body;
+    const { state_ids = [], name, description, image, points_required, stock, allow_multiple_redemptions, status, delivery_time_min, delivery_time_max, delivery_time_unit } = req.body;
 
     if (includesStateChange && Array.isArray(state_ids) && state_ids.length > 0) {
       const activeStates = await State.findAll({
@@ -278,6 +281,9 @@ export const updatePrize = async (
       stock,
       allow_multiple_redemptions,
       status,
+      delivery_time_min,
+      delivery_time_max,
+      delivery_time_unit
     });
 
     if (includesStateChange) {
